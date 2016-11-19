@@ -1,0 +1,3 @@
+rootProject.name = 'know_your_food'
+
+include ':app'
