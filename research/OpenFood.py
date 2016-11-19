@@ -68,7 +68,7 @@ sel_nutrients = join(product_nutrients, 'nutrient_id', nutrients, 'id')[fld_nutr
 sel_nutrients.head()
 
 
-# In[14]:
+# In[22]:
 
 prods = []
 for idx, p in sel_products.iterrows():
@@ -80,26 +80,26 @@ for idx, p in sel_products.iterrows():
         'index': {
             '_index': 'kyf',
             '_type': 'default',
-            '_id': 
+            '_id': obj['barcode']
         }
     }
     prods.append(action)
     prods.append(obj)
 
 
-# In[15]:
+# In[23]:
 
 len(prods)
 
 
-# In[16]:
+# In[24]:
 
 prods[3]
 
 
-# In[21]:
+# In[26]:
 
-es.bulk(prods[:3])
+es.bulk(prods)
 
 
 # In[ ]:
