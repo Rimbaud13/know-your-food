@@ -13,7 +13,7 @@ const styles = StyleSheet.create({
   },
 });
 
-class Tesseract extends Component {
+class UserInfo extends Component {
   render() {
     return (
       <View style={{flex:1}}>
@@ -36,4 +36,4 @@ class Tesseract extends Component {
   }
 }
 
-export default Tesseract;
+export default UserInfo;
