@@ -1,37 +1,39 @@
-import Tesseract from 'tesseract.js'
 let request = require('request')
-let fs = require('fs')
-// let url = 'https://cloud.avalan.ch/s/DJoo6g4dL7gEMct/download'
-let filename = 'menu.png'
-import _ from "lodash";
 
-/* export default function imageProcess(imagePath) {
+export default function imageProcess(url) {
 
- // let writeFile = fs.createWriteStream(filename)
+    request({
+            url: API_URL,
+            method: 'POST',
+            headers: { //We can define headers too
+                'Ocp-Apim-Subscription-Key': '0d1e0f955fe848f0bedd13361ed9dd8f',
+            },
+            json: {
+                url: url,
+            }
+        }, function (error, response, body) {
+            if (error) {
+                console.log(error);
+            } else {
+                let tex = "";
+                console.log(response.statusCode, body);
+                for (let i = 1; i < body.regions.length; i++) {
+                    for (let j = 0; j < body.regions[i].lines.length; j++) {
+                        for (let k = 0; k < body.regions[i].lines[j].words.length; k++) {
+                            tex += body.regions[i].lines[j].words[k].text + " ";
+                        }
+                        tex += "\n";
+                    }
+                }
+                console.log(tex);
+                parse(tex);
+            }
+        }
+    );
 
- // request(imagePath).pipe(writeFile).on('close', function () {
- // console.log(imagePath, 'saved to', filename)
- console.log("image path : ", imagePath);
- Tesseract.recognize(imagePath, {
- lang: 'fra',
- textord_tabfind_show_columns: 1
- }).progress(function (p) {
- console.log('progress', p)
- })
- .catch(err => console.error(err))
- .then(function (result) {
+}
 
- console.log(result.text)
- const meals = parse(result.text);
- console.log("meals", meals);
-
- process.exit(0)
- })
- //});
-
- } */
-
-const text = "MARGHERITA\nuce totnate maison et tnozzarella.\nRUCOLA\nRoquette, partnesan, sauce totnate maison.\nSALAME\nSalami Napoli sur notre sauce tomate\nmaison et mozzarella.\nFUNGHI\nChampignons frais, sauce tomate\nmaison et mozzarella.\n\n16,50\n17,00\n17,00\n17,00";
+const text = "MARGHERITA\nuce totnate maison et tnozzarella.\nRUCOLA\nRoquette, partnesan, sauce totnate maison.\nSALAME\nSalami Napoli sur notre sauce tomate\nmaison et mozzarella.\nFUNGHI\nChampignons frais, sauce tomate\nmaison et mozzarella.\n\n16,50\n17,00\n17,00\n17,00\nPROSCIUTTO E FUNGHI\nJatnbon et champignons frais sur notre\nsauce totnate maison et mozzarella.\nCALZONE\nSalami piquant, jambon italien \net champignons frais, sauce tomate maison\net mozzarella.\nTONNO\nThon et oignons rouges, sur notre sauce\ntomate maison et mozzarella.\n\nVAPIANO bELLA CASA\n\n19,00\n19,50\n18,50\n20,50";
 
 parse(text);
 
@@ -48,13 +50,13 @@ function parse(text) {
     for (let s in lines) {
         let line = lines[s];
         let isan = !isNaN(parseFloat(line));
+
         if (!isan && line.toUpperCase() === line) {
 
             if (mealCount > 0) {
                 array.push({name, description});
                 name = "";
                 description = [];
-                priceCount = 0;
             }
 
             name = line;
@@ -65,7 +67,7 @@ function parse(text) {
 
         if (isan) {
             if (array[priceCount]) {
-                array[priceCount].price = parseFloat(line);
+                array[priceCount].price = parseFloat(line.replace(',', '.'));
                 priceCount++;
             }
         }

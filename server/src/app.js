@@ -19,37 +19,12 @@ app.get('/', (req, res) => {
     res.send('hello');
 });
 
-app.post('/image', (req, res) => {
+app.all('/image', (req, res) => {
 
+    var url = req.query.image;
+    imageProcess(url);
+    res.send("yolo");
 
-
-    var url = req.body.image;
-    console.log(req.body);
-
-
-    /* var image;
-    const folder = 'images/';
-
-    if (!req.files) {
-        res.send('No files were uploaded.');
-        return;
-    }
-
-    image = req.files.image;
-    const path = folder + image.name;
-    image.mv(path, function (err) {
-        if (err) {
-            res.status(500).send(err);
-            console.log(err);
-        }
-        else {
-            res.send('File uploaded!');
-            console.log("File uploaded");
-            imageProcess(path);
-        }
-    }); */
-
-    // console.log("debug");
 });
 
 app.listen(PORT, () => {
