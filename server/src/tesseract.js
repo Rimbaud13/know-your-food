@@ -92,6 +92,6 @@ function correctPrice(meal) {
     i++;
   }
 
-  return {name:nameWords.slice(0, i-1), price: parseFloat(price), description:meal.description}
+  return {name:nameWords.slice(0, i), price: parseFloat(price), description:meal.description}
 
 }
