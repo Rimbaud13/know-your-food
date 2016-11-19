@@ -3,6 +3,8 @@
   "private": true,
   "version": "1.0.0",
   "devDependencies": {
+    "babel-eslint": "^7.0.0",
+    "babel-plugin-transform-flow-strip-types": "^6.14.0",
     "babel-preset-latest": "^6.16.0",
     "eslint": "^3.8.1",
     "eslint-config-airbnb": "^12.0.0",
@@ -15,8 +17,6 @@
     "grunt-contrib-clean": "^1.0.0",
     "grunt-contrib-watch": "^1.0.0",
     "grunt-express-server": "^0.5.3",
-    "babel-eslint": "^7.0.0",
-    "babel-plugin-transform-flow-strip-types": "^6.14.0",
     "load-grunt-tasks": "^3.5.2"
   },
   "scripts": {
@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "express": "^4.14.0",
+    "express-fileupload": "^0.0.5",
     "lodash": "^4.16.4"
   }
 }
