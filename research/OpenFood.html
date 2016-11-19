@@ -11755,6 +11755,9 @@ div#notebook {
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">word2vec</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">from</span> <span class="nn">elasticsearch</span> <span class="k">import</span> <span class="n">Elasticsearch</span>
 </pre></div>
 
 </div>
@@ -11764,11 +11767,10 @@ div#notebook {
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[4]:</div>
+<div class="prompt input_prompt">In&nbsp;[2]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">products</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;data/products.csv&#39;</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">products</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;data/products.csv&#39;</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">es</span> <span class="o">=</span> <span class="n">Elasticsearch</span><span class="p">(</span><span class="n">hosts</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;163.172.173.89:53837&#39;</span><span class="p">])</span>
 </pre></div>
 
 </div>
@@ -11781,7 +11783,57 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[3]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">product</span><span class="o">.</span><span class="n">head</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">products</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;data/products.csv&#39;</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="s1">&#39;id&#39;</span><span class="p">)</span>
+<span class="n">nutrients</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;data/nutrients.csv&#39;</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="s1">&#39;id&#39;</span><span class="p">)</span>
+<span class="n">product_nutrients</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;data/product_nutrients.csv&#39;</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;product_id&#39;</span><span class="p">,</span> <span class="s1">&#39;nutrient_id&#39;</span><span class="p">])</span>
+<span class="n">categories</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;data/categories.csv&#39;</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="s1">&#39;id&#39;</span><span class="p">)</span>
+<span class="n">categorisations</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;data/categorisations.csv&#39;</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;category_id&#39;</span><span class="p">,</span> <span class="s1">&#39;categorisable_id&#39;</span><span class="p">])</span>
+<span class="n">images</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;data/images.csv&#39;</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="s1">&#39;id&#39;</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[4]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">parse_fr</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">isnull</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    <span class="n">langs</span> <span class="o">=</span> <span class="p">{</span><span class="n">lang</span><span class="p">:</span> <span class="n">name</span> <span class="k">for</span> <span class="n">lang</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s1">r&#39;&quot;([^&quot;]+)&quot; ?=&gt; ?&quot;([^&quot;]+)&quot;&#39;</span><span class="p">,</span> <span class="n">value</span><span class="p">)}</span>
+    <span class="k">return</span> <span class="n">langs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;fr&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[5]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">def</span> <span class="nf">join</span><span class="p">(</span><span class="n">i1</span><span class="p">,</span> <span class="n">k1</span><span class="p">,</span> <span class="n">i2</span><span class="p">,</span> <span class="n">k2</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">i1</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">i2</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">k2</span><span class="p">),</span> <span class="n">on</span><span class="o">=</span><span class="n">k1</span><span class="p">,</span> <span class="n">lsuffix</span><span class="o">=</span><span class="s1">&#39;_&#39;</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[6]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">products</span><span class="p">[</span><span class="s1">&#39;fr&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">products</span><span class="o">.</span><span class="n">name_translations</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">parse_fr</span><span class="p">)</span>
+<span class="n">products</span><span class="o">.</span><span class="n">fr</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
 </pre></div>
 
 </div>
@@ -11792,391 +11844,446 @@ div#notebook {
 <div class="output">
 
 
-<div class="output_area"><div class="prompt output_prompt">Out[3]:</div>
+<div class="output_area"><div class="prompt output_prompt">Out[6]:</div>
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>&lt;bound method NDFrame.head of           id        barcode  \
-0       1089       80135463   
-1       7631  7610829783799   
-2       3855  4002359660191   
-3       1364  7616700187007   
-4       1326       22016065   
-5       1546  7613269539827   
-6       1404  5449000052407   
-7       1315  7613312044582   
-8       1384  7610173018264   
-9       1458  5000213015452   
-10      1402  7610845301793   
-11      1318  7617300500005   
-12      1398  7613331170453   
-13      1192  3162330052641   
-14      1194  7610055020750   
-15      1096       80177128   
-16      1125  7610235004884   
-17      1168  7610278041105   
-18      1153  3258561211534   
-19      1167  3258561011431   
-20      1310  8003490042804   
-21      1197  3161710000135   
-22      1174  3258561120034   
-23      1203  7613269356257   
-24      1217  7610200243430   
-25      1880  7613331360236   
-26      1136  7610235008004   
-27      1540       22129611   
-28      1409  5449000131805   
-29      1393  7610818075478   
-...      ...            ...   
-14164   7090  7610845467888   
-14165  12129  7617027066051   
-14166   4325  7610434014707   
-14167   6655  4009700084996   
-14168  13031       22052933   
-14169  11577  7610200301802   
-14170   1412       54492790   
-14171  14810  4011100015470   
-14172   2899  5410673700643   
-14173   2731  7610846889016   
-14174   2797  5000159472029   
-14175   6815  7640115251411   
-14176  14149  7616800214078   
-14177   3416  7610807015850   
-14178  13718  7613269299516   
-14179   3671  4012200417300   
-14180  14015  4062300230903   
-14181   3720  7610818264735   
-14182   4916  7640115251428   
-14183  12544  7613269407348   
-14184  11994  7616700193916   
-14185   8494  8001935221401   
-14186   6669  5060023970198   
-14187  11041  7610200011428   
-14188   5814  5997523324292   
-14189   9819  7613269263951   
-14190  15166  7616500651661   
-14191   4446  5997490111024   
-14192   5643  8076809529457   
-14193  11131  7617400037609   
-
-                                       name_translations  \
-0                                        &#34;it&#34;=&gt;&#34;nutella&#34;   
-1                                                    NaN   
-2                                                    NaN   
-3                                                    NaN   
-4                                                    NaN   
-5                                                    NaN   
-6                                                    NaN   
-7                                                    NaN   
-8                                                    NaN   
-9                                                    NaN   
-10                                                   NaN   
-11                                                   NaN   
-12                                                   NaN   
-13                                    &#34;fr&#34;=&gt;&#34;Saint-Omer&#34;   
-14                                      &#34;fr&#34;=&gt;&#34;Heineken&#34;   
-15                             &#34;it&#34;=&gt;&#34;FERRERO : nutella&#34;   
-16                       &#34;fr&#34;=&gt;&#34;granini : orange-mangue&#34;   
-17     &#34;de&#34;=&gt;&#34;AARBERG: WurfelZucker&#34;, &#34;fr&#34;=&gt;&#34;AARBERG:...   
-18           &#34;fr&#34;=&gt;&#34;Belle France : Lentilles, cuisinées&#34;   
-19      &#34;fr&#34;=&gt;&#34;Belle France: Popcorn micro-ondable salé&#34;   
-20                                                   NaN   
-21                             &#34;fr&#34;=&gt;&#34;Caprice des Dieux&#34;   
-22     &#34;fr&#34;=&gt;&#34;Belle France : Pruneaux d&#39;Agen, dénoyau...   
-23     &#34;de&#34;=&gt;&#34;Waldhonig&#34;, &#34;fr&#34;=&gt;&#34;Miel de forêt&#34;, &#34;it&#34;...   
-24     &#34;de&#34;=&gt;&#34;Vollmilch&#34;, &#34;fr&#34;=&gt;&#34;Lait entier&#34;, &#34;it&#34;=&gt;...   
-25     &#34;de&#34;=&gt;&#34;Pudding &amp; Creme Vanille : zum Kochen&#34;, ...   
-26         &#34;de&#34;=&gt;&#34;granini : Fruchtig &amp; Prickelnd, Apfel&#34;   
-27                                                   NaN   
-28                                                   NaN   
-29                                                   NaN   
-...                                                  ...   
-14164                                                NaN   
-14165                                                NaN   
-14166                                                NaN   
-14167                                                NaN   
-14168                                                NaN   
-14169                                                NaN   
-14170                                                NaN   
-14171                                      &#34;en&#34;=&gt;&#34;M&amp;M&#39;s&#34;   
-14172                                                NaN   
-14173                                                NaN   
-14174                                                NaN   
-14175                                                NaN   
-14176  &#34;de&#34;=&gt;&#34;Rösti Kroketten&#34;, &#34;fr&#34;=&gt;&#34;Croquettes de ...   
-14177                                                NaN   
-14178                                                NaN   
-14179                                                NaN   
-14180  &#34;de&#34;=&gt;&#34;Hipp Sternchennudeln mit italienischem ...   
-14181                                                NaN   
-14182                                                NaN   
-14183  &#34;de&#34;=&gt;&#34;Tête de Moine Rosetten&#34;, &#34;fr&#34;=&gt;&#34;Tête de...   
-14184                                                NaN   
-14185                                                NaN   
-14186                                                NaN   
-14187                                                NaN   
-14188                                                NaN   
-14189  &#34;de&#34;=&gt;&#34;American Favorites Chocolate Muffin&#34;, &#34;...   
-14190  &#34;de&#34;=&gt;&#34;Ice Tea Gum : Sugarfree : Pfirsich&#34;, &#34;f...   
-14191                                                NaN   
-14192                                                NaN   
-14193                                                NaN   
-
-                                ingredients_translations  \
-0      &#34;fr&#34;=&gt;&#34;sucre, huile de palme, noisettes 13%, c...   
-1                                                    NaN   
-2                                                    NaN   
-3                                                    NaN   
-4                                                    NaN   
-5                                                    NaN   
-6                                                    NaN   
-7                                                    NaN   
-8                                                    NaN   
-9                                                    NaN   
-10                                                   NaN   
-11                                                   NaN   
-12                                                   NaN   
-13     &#34;en&#34;=&gt;&#34;water, barley, maize, hop extracts, col...   
-14                                                   NaN   
-15     &#34;fr&#34;=&gt;&#34;sucre, huile de palme, noisettes 13%, c...   
-16     &#34;de&#34;=&gt;&#34;Wasser, Orangensaft aus Konzentrat (34%...   
-17     &#34;de&#34;=&gt;&#34;Zucker aus Zuckerruben (Schweiz)&#34;, &#34;fr&#34;...   
-18     &#34;fr&#34;=&gt;&#34;Eau, lentilles précuites 43%, carottes,...   
-19     &#34;fr&#34;=&gt;&#34;maïs à éclater, huile végétale (palme),...   
-20                                                   NaN   
-21                                                   NaN   
-22     &#34;fr&#34;=&gt;&#34;Pruneaux d&#39;Agen dénoyeautés, pasteurisé...   
-23                                                   NaN   
-24     &#34;de&#34;=&gt;&#34;UHT, homogenisiert&#34;, &#34;fr&#34;=&gt;&#34;UHT, homogé...   
-25     &#34;de&#34;=&gt;&#34;Zucker, Maisstärke, Geliermittel (E407)...   
-26     &#34;de&#34;=&gt;&#34;natürliches Mineralwasser, Apfelsaft au...   
-27                                                   NaN   
-28                                                   NaN   
-29                                                   NaN   
-...                                                  ...   
-14164                                                NaN   
-14165                                                NaN   
-14166                                                NaN   
-14167                                                NaN   
-14168                                                NaN   
-14169                                                NaN   
-14170                                                NaN   
-14171                                                NaN   
-14172                                                NaN   
-14173                                                NaN   
-14174                                                NaN   
-14175                                                NaN   
-14176                                                NaN   
-14177                                                NaN   
-14178                                                NaN   
-14179                                                NaN   
-14180                                                NaN   
-14181                                                NaN   
-14182                                                NaN   
-14183                                                NaN   
-14184                                                NaN   
-14185                                                NaN   
-14186                                                NaN   
-14187                                                NaN   
-14188                                                NaN   
-14189                                                NaN   
-14190                                                NaN   
-14191                                                NaN   
-14192                                                NaN   
-14193                                                NaN   
-
-                                     origin_translations      status  \
-0                                                    NaN    complete   
-1                                                    NaN       draft   
-2                                                    NaN       draft   
-3                                                    NaN       draft   
-4                                                    NaN       draft   
-5                                                    NaN       draft   
-6                                                    NaN       draft   
-7                                                    NaN       draft   
-8                                                    NaN       draft   
-9                                                    NaN       draft   
-10                                                   NaN       draft   
-11                                                   NaN       draft   
-12                                                   NaN       draft   
-13                                                   NaN    complete   
-14                                                   NaN  incomplete   
-15                                                   NaN    complete   
-16           &#34;de&#34;=&gt;&#34;[\&#34;Schweiz\&#34;]&#34;, &#34;fr&#34;=&gt;&#34;[\&#34;Suisse\&#34;]&#34;    complete   
-17                                                   NaN    complete   
-18                                                   NaN    complete   
-19                                                   NaN    complete   
-20                                                   NaN       draft   
-21                                                   NaN    complete   
-22                                                   NaN    complete   
-23             &#34;fr&#34;=&gt;&#34;[\&#34;Amérique du sud\&#34;, \&#34;Europe\&#34;]&#34;    complete   
-24                                                   NaN    complete   
-25     &#34;de&#34;=&gt;&#34;[\&#34;Schweiz\&#34;]&#34;, &#34;fr&#34;=&gt;&#34;[\&#34;Suisse\&#34;]&#34;, &#34;...    complete   
-26     &#34;de&#34;=&gt;&#34;[\&#34;Deutschland\&#34;]&#34;, &#34;fr&#34;=&gt;&#34;[\&#34;Allemagne...    complete   
-27                                                   NaN       draft   
-28                                                   NaN       draft   
-29                                                   NaN       draft   
-...                                                  ...         ...   
-14164                                                NaN       draft   
-14165                                                NaN       draft   
-14166                                                NaN       draft   
-14167                                                NaN       draft   
-14168                                                NaN       draft   
-14169                                                NaN       draft   
-14170                                                NaN       draft   
-14171                                                NaN   name only   
-14172                                                NaN       draft   
-14173                                                NaN       draft   
-14174                                                NaN       draft   
-14175                                                NaN  incomplete   
-14176                                                NaN   name only   
-14177                                                NaN       draft   
-14178                                                NaN       draft   
-14179                                                NaN       draft   
-14180                                                NaN   name only   
-14181                                                NaN       draft   
-14182                                                NaN  incomplete   
-14183                                                NaN   name only   
-14184                                                NaN       draft   
-14185                                                NaN       draft   
-14186                                                NaN       draft   
-14187                                                NaN       draft   
-14188                                                NaN       draft   
-14189                                                NaN   name only   
-14190                                                NaN   name only   
-14191                                                NaN       draft   
-14192                                                NaN       draft   
-14193                                                NaN       draft   
-
-                       created_at                  updated_at unit  quantity  \
-0      2016-06-03 12:08:53.732866  2016-07-26 14:12:07.730515    g     200.0   
-1       2016-07-26 06:32:22.00629  2016-11-08 13:20:55.383036    g       NaN   
-2      2016-07-13 06:47:19.609535  2016-11-08 14:12:59.967935    g       NaN   
-3      2016-06-03 14:21:50.155539  2016-11-08 15:58:44.125845    g       NaN   
-4      2016-06-03 14:17:48.859372  2016-11-09 08:23:00.575959    g       NaN   
-5      2016-06-16 09:33:48.941847  2016-11-10 12:26:54.004047    g     800.0   
-6       2016-06-06 06:34:54.75967  2016-11-10 13:52:03.019269   ml       NaN   
-7      2016-06-03 14:16:57.384215  2016-11-10 15:49:17.352898    g       NaN   
-8       2016-06-06 06:34:32.79703   2016-06-06 06:34:32.79703    g       NaN   
-9      2016-06-08 06:36:48.797219  2016-06-08 06:36:48.797219    g       NaN   
-10     2016-06-06 06:34:52.328682  2016-11-10 15:49:18.635075   ml       NaN   
-11     2016-06-03 14:17:10.486661  2016-11-11 13:42:56.255099    g       NaN   
-12     2016-06-06 06:34:48.573328  2016-11-10 15:59:06.995841   ml       NaN   
-13     2016-06-03 12:15:37.657165  2016-07-30 15:00:20.387146   ml     500.0   
-14     2016-06-03 12:15:43.065892  2016-07-30 16:04:41.421452    g     500.0   
-15     2016-06-03 12:09:27.627962  2016-08-18 08:16:25.186889    g     400.0   
-16     2016-06-03 12:11:26.127199  2016-08-18 08:20:20.924716   ml    1000.0   
-17     2016-06-03 12:14:31.407498  2016-09-15 16:57:38.595156    g    1000.0   
-18     2016-06-03 12:13:08.007491   2016-08-18 08:22:40.33004    g     410.0   
-19     2016-06-03 12:14:31.012423  2016-08-18 08:25:05.260667    g     270.0   
-20     2016-06-03 14:16:29.261827  2016-10-13 18:01:14.432054    g       NaN   
-21     2016-06-03 12:17:59.672957  2016-08-18 08:29:11.726773    g       NaN   
-22     2016-06-03 12:14:51.475906  2016-08-18 08:26:05.192842    g     500.0   
-23     2016-06-03 14:00:38.003647  2016-08-18 08:29:40.234986    g     550.0   
-24     2016-06-03 14:01:55.490504  2016-08-18 08:31:33.863076   ml    2000.0   
-25      2016-06-24 06:42:15.54752  2016-08-18 09:32:19.148389    g     216.0   
-26     2016-06-03 12:12:09.351481  2016-09-15 16:15:56.044414   ml     500.0   
-27     2016-06-16 09:33:44.943233  2016-11-03 14:57:27.004525    g       NaN   
-28     2016-06-06 06:34:58.658565  2016-11-03 14:58:44.551641    g       NaN   
-29     2016-06-06 06:34:41.961954  2016-11-04 07:40:13.689641    g       NaN   
-...                           ...                         ...  ...       ...   
-14164  2016-07-21 11:56:34.100133  2016-11-07 16:12:36.339127    g       NaN   
-14165  2016-09-13 16:38:00.648989   2016-11-07 16:12:50.21724    g       NaN   
-14166  2016-07-13 20:16:24.375239  2016-11-08 07:44:49.094554   ml       NaN   
-14167   2016-07-19 16:15:27.40666  2016-11-08 07:44:52.453681    g       NaN   
-14168  2016-09-13 19:15:14.726242  2016-11-08 07:45:05.397571    g       NaN   
-14169   2016-09-13 14:20:49.72352  2016-11-08 07:45:07.260649    g       NaN   
-14170  2016-06-06 06:34:59.913811  2016-11-08 07:45:17.800011   ml       NaN   
-14171  2016-09-14 13:03:53.497207  2016-11-08 07:45:38.479917    g       NaN   
-14172  2016-07-12 06:20:50.597551  2016-11-08 07:45:43.045393    g       NaN   
-14173  2016-07-11 22:03:38.646738  2016-11-08 07:45:47.218192    g       NaN   
-14174  2016-07-11 22:05:18.368213  2016-11-08 07:46:40.845395    g       NaN   
-14175  2016-07-19 16:18:35.611361  2016-11-08 07:46:42.952724   ml       NaN   
-14176  2016-09-14 10:51:35.406077  2016-11-08 08:51:45.994641    g       NaN   
-14177    2016-07-12 20:29:26.9519   2016-11-08 09:06:31.78285    g       NaN   
-14178  2016-09-14 05:59:35.580388  2016-11-08 09:08:27.935113    g       NaN   
-14179  2016-07-13 06:30:52.899415  2016-11-08 09:39:33.308258    g       NaN   
-14180  2016-09-14 06:17:25.822039  2016-11-08 09:39:58.253591    g       NaN   
-14181  2016-07-13 06:33:06.401313  2016-11-08 09:56:57.540693    g       NaN   
-14182  2016-07-14 20:01:59.065543  2016-11-08 09:57:04.662038    g       NaN   
-14183  2016-09-13 18:08:45.791352  2016-11-08 09:59:30.086936    g       NaN   
-14184  2016-09-13 16:30:32.842944  2016-11-08 10:10:26.410548    g       NaN   
-14185  2016-07-27 16:32:42.082183  2016-11-08 10:22:59.777138   ml       NaN   
-14186  2016-07-19 16:15:44.819143  2016-11-08 10:45:41.626425    g       NaN   
-14187  2016-09-12 17:54:05.013857  2016-11-08 10:45:44.165054    g       NaN   
-14188  2016-07-17 00:33:08.439656  2016-11-08 10:45:45.823619    g       NaN   
-14189   2016-09-12 15:31:36.13131  2016-11-08 10:57:52.399756    g       NaN   
-14190  2016-09-15 21:33:26.589575  2016-11-08 12:15:16.826318    g       NaN   
-14191  2016-07-13 23:03:37.844422  2016-11-08 12:16:56.539738    g       NaN   
-14192  2016-07-17 00:04:29.310227  2016-11-08 12:18:00.009034    g       NaN   
-14193    2016-09-12 18:00:18.5648  2016-11-08 13:12:59.634974    g       NaN   
-
-       portion_quantity               remarks  alcool_by_volume  
-0                  15.0                   NaN               0.0  
-1                 125.0                   NaN               0.0  
-2                 130.0                   NaN               0.0  
-3                  42.0                   NaN               0.0  
-4                 180.0                   NaN               0.0  
-5                 400.0                   NaN               0.0  
-6                 330.0                   NaN               0.0  
-7                   NaN                   NaN               0.0  
-8                   NaN                   NaN               0.0  
-9                   NaN                   NaN               0.0  
-10                250.0                   NaN               0.0  
-11                 15.0                   NaN               0.0  
-12                 41.0                   NaN               0.0  
-13                  NaN                   NaN               5.0  
-14                  NaN   Ingrédients absents               5.0  
-15                 15.0                   NaN               0.0  
-16                  NaN                   NaN               0.0  
-17                  NaN                   NaN               0.0  
-18                200.0                   NaN               0.0  
-19                 90.0                   NaN               0.0  
-20                  NaN                   NaN               0.0  
-21                 30.0                   NaN               0.0  
-22                  NaN                   NaN               0.0  
-23                  NaN                   NaN               0.0  
-24                250.0                   NaN               0.0  
-25                  0.0                   NaN               0.0  
-26                  NaN                   NaN               0.0  
-27                250.0                   NaN               0.0  
-28                330.0                   NaN               0.0  
-29                 41.0                   NaN               0.0  
-...                 ...                   ...               ...  
-14164              50.0                   NaN               0.0  
-14165             100.0                   NaN               0.0  
-14166             100.0                   NaN               0.0  
-14167               NaN                   NaN               0.0  
-14168             100.0                   NaN               0.0  
-14169              30.0                   NaN               0.0  
-14170             250.0                   NaN               0.0  
-14171              41.0                   NaN               0.0  
-14172              62.0                   NaN               0.0  
-14173              19.0                   NaN               0.0  
-14174              42.0                   NaN               0.0  
-14175            1000.0      missing minerals               0.0  
-14176             100.0                   NaN               0.0  
-14177              30.0                   NaN               0.0  
-14178              20.0                   NaN               0.0  
-14179               NaN                   NaN               0.0  
-14180             250.0                   NaN               0.0  
-14181               NaN                   NaN               0.0  
-14182               NaN  missing minerals\r\n               0.0  
-14183              13.0                   NaN               0.0  
-14184              42.0                   NaN               0.0  
-14185             750.0                   NaN               0.0  
-14186               NaN                   NaN               0.0  
-14187              40.0                   NaN               0.0  
-14188             240.0                   NaN               0.0  
-14189               NaN                   NaN               0.0  
-14190               NaN                   NaN               0.0  
-14191               NaN                   NaN               0.0  
-14192              85.0                   NaN               0.0  
-14193              30.0                   NaN               0.0  
-
-[14194 rows x 13 columns]&gt;</pre>
+<pre>2028</pre>
 </div>
 
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[7]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">nutrients</span><span class="p">[</span><span class="s1">&#39;fr&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">nutrients</span><span class="o">.</span><span class="n">name_translations</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">parse_fr</span><span class="p">)</span>
+<span class="n">nutrients</span><span class="o">.</span><span class="n">fr</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area"><div class="prompt output_prompt">Out[7]:</div>
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>40</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[8]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">fld_products</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;fr&#39;</span><span class="p">,</span> <span class="s1">&#39;barcode&#39;</span><span class="p">,</span> <span class="s1">&#39;unit&#39;</span><span class="p">,</span> <span class="s1">&#39;quantity&#39;</span><span class="p">,</span> <span class="s1">&#39;portion_quantity&#39;</span><span class="p">,</span> <span class="s1">&#39;alcool_by_volume&#39;</span><span class="p">]</span>
+<span class="n">sel_products</span> <span class="o">=</span> <span class="n">products</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">notnull</span><span class="p">(</span><span class="n">products</span><span class="o">.</span><span class="n">fr</span><span class="p">)][</span><span class="n">fld_products</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">value</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">sel_products</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area"><div class="prompt output_prompt">Out[8]:</div>
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>fr</th>
+      <th>barcode</th>
+      <th>unit</th>
+      <th>quantity</th>
+      <th>portion_quantity</th>
+      <th>alcool_by_volume</th>
+    </tr>
+    <tr>
+      <th>id</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>1192</th>
+      <td>Saint-Omer</td>
+      <td>3162330052641</td>
+      <td>ml</td>
+      <td>500.0</td>
+      <td>-1.0</td>
+      <td>5.0</td>
+    </tr>
+    <tr>
+      <th>1194</th>
+      <td>Heineken</td>
+      <td>7610055020750</td>
+      <td>g</td>
+      <td>500.0</td>
+      <td>-1.0</td>
+      <td>5.0</td>
+    </tr>
+    <tr>
+      <th>1125</th>
+      <td>granini : orange-mangue</td>
+      <td>7610235004884</td>
+      <td>ml</td>
+      <td>1000.0</td>
+      <td>-1.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>1168</th>
+      <td>AARBERG: Sucre en morceaux</td>
+      <td>7610278041105</td>
+      <td>g</td>
+      <td>1000.0</td>
+      <td>-1.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>1153</th>
+      <td>Belle France : Lentilles, cuisinées</td>
+      <td>3258561211534</td>
+      <td>g</td>
+      <td>410.0</td>
+      <td>200.0</td>
+      <td>0.0</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[9]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">fld_nutrients</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;product_id&#39;</span><span class="p">,</span> <span class="s1">&#39;fr&#39;</span><span class="p">,</span> <span class="s1">&#39;per_portion&#39;</span><span class="p">,</span> <span class="s1">&#39;per_day&#39;</span><span class="p">,</span> <span class="s1">&#39;per_hundred&#39;</span><span class="p">,</span> <span class="s1">&#39;unit&#39;</span><span class="p">]</span>
+<span class="n">sel_nutrients</span> <span class="o">=</span> <span class="n">join</span><span class="p">(</span><span class="n">product_nutrients</span><span class="p">,</span> <span class="s1">&#39;nutrient_id&#39;</span><span class="p">,</span> <span class="n">nutrients</span><span class="p">,</span> <span class="s1">&#39;id&#39;</span><span class="p">)[</span><span class="n">fld_nutrients</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">value</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">sel_nutrients</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area"><div class="prompt output_prompt">Out[9]:</div>
+
+<div class="output_html rendered_html output_subarea output_execute_result">
+<div>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>product_id</th>
+      <th>fr</th>
+      <th>per_portion</th>
+      <th>per_day</th>
+      <th>per_hundred</th>
+      <th>unit</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>971</td>
+      <td>Énergie</td>
+      <td>117.0</td>
+      <td>6.0</td>
+      <td>2430.0</td>
+      <td>kJ</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>971</td>
+      <td>Énergie (kCal)</td>
+      <td>-1.0</td>
+      <td>-1.0</td>
+      <td>581.0</td>
+      <td>kCal</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>971</td>
+      <td>Protéines</td>
+      <td>2.0</td>
+      <td>4.0</td>
+      <td>10.0</td>
+      <td>g</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>971</td>
+      <td>Matières grasses</td>
+      <td>8.0</td>
+      <td>2.0</td>
+      <td>42.0</td>
+      <td>g</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>971</td>
+      <td>Glucides</td>
+      <td>7.0</td>
+      <td>3.0</td>
+      <td>38.0</td>
+      <td>g</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[14]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">prods</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">sel_products</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+    <span class="n">obj</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+    <span class="n">obj</span><span class="p">[</span><span class="s1">&#39;nutrients&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">nut</span> <span class="ow">in</span> <span class="n">sel_nutrients</span><span class="p">[</span><span class="n">sel_nutrients</span><span class="o">.</span><span class="n">product_id</span> <span class="o">==</span> <span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+        <span class="n">obj</span><span class="p">[</span><span class="s1">&#39;nutrients&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nut</span><span class="o">.</span><span class="n">to_dict</span><span class="p">())</span>
+    <span class="n">action</span> <span class="o">=</span> <span class="p">{</span> 
+        <span class="s1">&#39;index&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">&#39;_index&#39;</span><span class="p">:</span> <span class="s1">&#39;kyf&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;_type&#39;</span><span class="p">:</span> <span class="s1">&#39;default&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;_id&#39;</span><span class="p">:</span> 
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="n">prods</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+    <span class="n">prods</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[15]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="nb">len</span><span class="p">(</span><span class="n">prods</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area"><div class="prompt output_prompt">Out[15]:</div>
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>2029</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[16]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">prods</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area"><div class="prompt output_prompt">Out[16]:</div>
+
+
+<div class="output_text output_subarea output_execute_result">
+<pre>{&#39;alcool_by_volume&#39;: 0.0,
+ &#39;barcode&#39;: &#39;7610235004884&#39;,
+ &#39;fr&#39;: &#39;granini : orange-mangue&#39;,
+ &#39;nutrients&#39;: [{&#39;fr&#39;: &#39;Énergie&#39;,
+   &#39;per_day&#39;: -1.0,
+   &#39;per_hundred&#39;: 212.0,
+   &#39;per_portion&#39;: -1.0,
+   &#39;product_id&#39;: 1125,
+   &#39;unit&#39;: &#39;kJ&#39;},
+  {&#39;fr&#39;: &#39;Énergie (kCal)&#39;,
+   &#39;per_day&#39;: -1.0,
+   &#39;per_hundred&#39;: 51.0,
+   &#39;per_portion&#39;: -1.0,
+   &#39;product_id&#39;: 1125,
+   &#39;unit&#39;: &#39;kCal&#39;},
+  {&#39;fr&#39;: &#39;Matières grasses&#39;,
+   &#39;per_day&#39;: -1.0,
+   &#39;per_hundred&#39;: 0.2,
+   &#39;per_portion&#39;: -1.0,
+   &#39;product_id&#39;: 1125,
+   &#39;unit&#39;: &#39;g&#39;},
+  {&#39;fr&#39;: &#39;Acides gras saturées&#39;,
+   &#39;per_day&#39;: -1.0,
+   &#39;per_hundred&#39;: 0.1,
+   &#39;per_portion&#39;: -1.0,
+   &#39;product_id&#39;: 1125,
+   &#39;unit&#39;: &#39;g&#39;},
+  {&#39;fr&#39;: &#39;Glucides&#39;,
+   &#39;per_day&#39;: -1.0,
+   &#39;per_hundred&#39;: 11.4,
+   &#39;per_portion&#39;: -1.0,
+   &#39;product_id&#39;: 1125,
+   &#39;unit&#39;: &#39;g&#39;},
+  {&#39;fr&#39;: &#39;Sucres&#39;,
+   &#39;per_day&#39;: -1.0,
+   &#39;per_hundred&#39;: 11.4,
+   &#39;per_portion&#39;: -1.0,
+   &#39;product_id&#39;: 1125,
+   &#39;unit&#39;: &#39;g&#39;},
+  {&#39;fr&#39;: &#39;Protéines&#39;,
+   &#39;per_day&#39;: -1.0,
+   &#39;per_hundred&#39;: 0.5,
+   &#39;per_portion&#39;: -1.0,
+   &#39;product_id&#39;: 1125,
+   &#39;unit&#39;: &#39;g&#39;},
+  {&#39;fr&#39;: &#39;Sel&#39;,
+   &#39;per_day&#39;: -1.0,
+   &#39;per_hundred&#39;: 0.0,
+   &#39;per_portion&#39;: -1.0,
+   &#39;product_id&#39;: 1125,
+   &#39;unit&#39;: &#39;g&#39;}],
+ &#39;portion_quantity&#39;: -1.0,
+ &#39;quantity&#39;: 1000.0,
+ &#39;unit&#39;: &#39;ml&#39;}</pre>
+</div>
+
+</div>
+
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[21]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">es</span><span class="o">.</span><span class="n">bulk</span><span class="p">(</span><span class="n">prods</span><span class="p">[:</span><span class="mi">3</span><span class="p">])</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area"><div class="prompt"></div>
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>POST http://163.172.173.89:53837/_bulk [status:400 request:0.107s]
+</pre>
+</div>
+</div>
+
+<div class="output_area"><div class="prompt"></div>
+<div class="output_subarea output_text output_error">
+<pre>
+<span class="ansi-red-fg">---------------------------------------------------------------------------</span>
+<span class="ansi-red-fg">RequestError</span>                              Traceback (most recent call last)
+<span class="ansi-green-fg">&lt;ipython-input-21-3cb77de844e9&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span><span class="ansi-blue-fg">()</span>
+<span class="ansi-green-fg">----&gt; 1</span><span class="ansi-red-fg"> </span>es<span class="ansi-blue-fg">.</span>bulk<span class="ansi-blue-fg">(</span>prods<span class="ansi-blue-fg">[</span><span class="ansi-blue-fg">:</span><span class="ansi-cyan-fg">3</span><span class="ansi-blue-fg">]</span><span class="ansi-blue-fg">)</span>
+
+<span class="ansi-green-fg">/usr/local/lib/python3.5/site-packages/elasticsearch/client/utils.py</span> in <span class="ansi-cyan-fg">_wrapped</span><span class="ansi-blue-fg">(*args, **kwargs)</span>
+<span class="ansi-green-intense-fg ansi-bold">     69</span>                 <span class="ansi-green-fg">if</span> p <span class="ansi-green-fg">in</span> kwargs<span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">     70</span>                     params<span class="ansi-blue-fg">[</span>p<span class="ansi-blue-fg">]</span> <span class="ansi-blue-fg">=</span> kwargs<span class="ansi-blue-fg">.</span>pop<span class="ansi-blue-fg">(</span>p<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-fg">---&gt; 71</span><span class="ansi-red-fg">             </span><span class="ansi-green-fg">return</span> func<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">*</span>args<span class="ansi-blue-fg">,</span> params<span class="ansi-blue-fg">=</span>params<span class="ansi-blue-fg">,</span> <span class="ansi-blue-fg">**</span>kwargs<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">     72</span>         <span class="ansi-green-fg">return</span> _wrapped
+<span class="ansi-green-intense-fg ansi-bold">     73</span>     <span class="ansi-green-fg">return</span> _wrapper
+
+<span class="ansi-green-fg">/usr/local/lib/python3.5/site-packages/elasticsearch/client/__init__.py</span> in <span class="ansi-cyan-fg">bulk</span><span class="ansi-blue-fg">(self, body, index, doc_type, params)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1094</span>             <span class="ansi-green-fg">raise</span> ValueError<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">&#34;Empty value passed for a required argument &#39;body&#39;.&#34;</span><span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">   1095</span>         return self.transport.perform_request(&#39;POST&#39;, _make_path(index,
+<span class="ansi-green-fg">-&gt; 1096</span><span class="ansi-red-fg">             doc_type, &#39;_bulk&#39;), params=params, body=self._bulk_body(body))
+</span><span class="ansi-green-intense-fg ansi-bold">   1097</span> 
+<span class="ansi-green-intense-fg ansi-bold">   1098</span>     <span class="ansi-blue-fg">@</span>query_params<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">&#39;max_concurrent_searches&#39;</span><span class="ansi-blue-fg">,</span> <span class="ansi-blue-fg">&#39;search_type&#39;</span><span class="ansi-blue-fg">)</span>
+
+<span class="ansi-green-fg">/usr/local/lib/python3.5/site-packages/elasticsearch/transport.py</span> in <span class="ansi-cyan-fg">perform_request</span><span class="ansi-blue-fg">(self, method, url, params, body)</span>
+<span class="ansi-green-intense-fg ansi-bold">    325</span> 
+<span class="ansi-green-intense-fg ansi-bold">    326</span>             <span class="ansi-green-fg">try</span><span class="ansi-blue-fg">:</span>
+<span class="ansi-green-fg">--&gt; 327</span><span class="ansi-red-fg">                 </span>status<span class="ansi-blue-fg">,</span> headers<span class="ansi-blue-fg">,</span> data <span class="ansi-blue-fg">=</span> connection<span class="ansi-blue-fg">.</span>perform_request<span class="ansi-blue-fg">(</span>method<span class="ansi-blue-fg">,</span> url<span class="ansi-blue-fg">,</span> params<span class="ansi-blue-fg">,</span> body<span class="ansi-blue-fg">,</span> ignore<span class="ansi-blue-fg">=</span>ignore<span class="ansi-blue-fg">,</span> timeout<span class="ansi-blue-fg">=</span>timeout<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    328</span> 
+<span class="ansi-green-intense-fg ansi-bold">    329</span>             <span class="ansi-green-fg">except</span> TransportError <span class="ansi-green-fg">as</span> e<span class="ansi-blue-fg">:</span>
+
+<span class="ansi-green-fg">/usr/local/lib/python3.5/site-packages/elasticsearch/connection/http_urllib3.py</span> in <span class="ansi-cyan-fg">perform_request</span><span class="ansi-blue-fg">(self, method, url, params, body, timeout, ignore)</span>
+<span class="ansi-green-intense-fg ansi-bold">    122</span>         <span class="ansi-green-fg">if</span> <span class="ansi-green-fg">not</span> <span class="ansi-blue-fg">(</span><span class="ansi-cyan-fg">200</span> <span class="ansi-blue-fg">&lt;=</span> response<span class="ansi-blue-fg">.</span>status <span class="ansi-blue-fg">&lt;</span> <span class="ansi-cyan-fg">300</span><span class="ansi-blue-fg">)</span> <span class="ansi-green-fg">and</span> response<span class="ansi-blue-fg">.</span>status <span class="ansi-green-fg">not</span> <span class="ansi-green-fg">in</span> ignore<span class="ansi-blue-fg">:</span>
+<span class="ansi-green-intense-fg ansi-bold">    123</span>             self<span class="ansi-blue-fg">.</span>log_request_fail<span class="ansi-blue-fg">(</span>method<span class="ansi-blue-fg">,</span> full_url<span class="ansi-blue-fg">,</span> url<span class="ansi-blue-fg">,</span> body<span class="ansi-blue-fg">,</span> duration<span class="ansi-blue-fg">,</span> response<span class="ansi-blue-fg">.</span>status<span class="ansi-blue-fg">,</span> raw_data<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-fg">--&gt; 124</span><span class="ansi-red-fg">             </span>self<span class="ansi-blue-fg">.</span>_raise_error<span class="ansi-blue-fg">(</span>response<span class="ansi-blue-fg">.</span>status<span class="ansi-blue-fg">,</span> raw_data<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    125</span> 
+<span class="ansi-green-intense-fg ansi-bold">    126</span>         self.log_request_success(method, full_url, url, body, response.status,
+
+<span class="ansi-green-fg">/usr/local/lib/python3.5/site-packages/elasticsearch/connection/base.py</span> in <span class="ansi-cyan-fg">_raise_error</span><span class="ansi-blue-fg">(self, status_code, raw_data)</span>
+<span class="ansi-green-intense-fg ansi-bold">    120</span>             logger<span class="ansi-blue-fg">.</span>warning<span class="ansi-blue-fg">(</span><span class="ansi-blue-fg">&#39;Undecodable raw error response from server: %s&#39;</span><span class="ansi-blue-fg">,</span> err<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    121</span> 
+<span class="ansi-green-fg">--&gt; 122</span><span class="ansi-red-fg">         </span><span class="ansi-green-fg">raise</span> HTTP_EXCEPTIONS<span class="ansi-blue-fg">.</span>get<span class="ansi-blue-fg">(</span>status_code<span class="ansi-blue-fg">,</span> TransportError<span class="ansi-blue-fg">)</span><span class="ansi-blue-fg">(</span>status_code<span class="ansi-blue-fg">,</span> error_message<span class="ansi-blue-fg">,</span> additional_info<span class="ansi-blue-fg">)</span>
+<span class="ansi-green-intense-fg ansi-bold">    123</span> 
+<span class="ansi-green-intense-fg ansi-bold">    124</span> 
+
+<span class="ansi-red-fg">RequestError</span>: TransportError(400, &#39;illegal_argument_exception&#39;, &#39;Malformed action/metadata line [3], expected START_OBJECT or END_OBJECT but found [VALUE_STRING]&#39;)</pre>
+</div>
 </div>
 
 </div>
@@ -12215,6 +12322,152 @@ div#notebook {
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-ipython3"><pre><span></span> 
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span> 
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s1">&#39;\s+&#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s1">&#39;[:\.\(\)0123456789%,–\?</span><span class="se">\\</span><span class="s1">\&amp;</span><span class="se">\&#39;</span><span class="s1">]&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">product_fr</span><span class="o">.</span><span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()))</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;data/names.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">word2vec</span><span class="o">.</span><span class="n">word2phrase</span><span class="p">(</span><span class="s1">&#39;data/names.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;data/names-phrases.txt&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">word2vec</span><span class="o">.</span><span class="n">word2vec</span><span class="p">(</span><span class="s1">&#39;data/names.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;data/names-model.bin&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">word2vec</span><span class="o">.</span><span class="n">word2clusters</span><span class="p">(</span><span class="s1">&#39;data/names.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;data/names-clusters.txt&#39;</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">word2vec</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;data/names-model.bin&#39;</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">clusters</span> <span class="o">=</span> <span class="n">word2vec</span><span class="o">.</span><span class="n">load_clusters</span><span class="p">(</span><span class="s1">&#39;data/names-clusters.txt&#39;</span><span class="p">)</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">vocab</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">vectors</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+
+</div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">indexes</span><span class="p">,</span> <span class="n">metrics</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">analogy</span><span class="p">(</span><span class="n">pos</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;snack&#39;</span><span class="p">],</span> <span class="n">neg</span><span class="o">=</span><span class="p">[],</span> <span class="n">n</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">generate_response</span><span class="p">(</span><span class="n">indexes</span><span class="p">,</span> <span class="n">metrics</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
 </pre></div>
 
 </div>
