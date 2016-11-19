@@ -51,7 +51,8 @@ function parse(plaintext) {
   meals.push(meal);
 
   let parsedMeals = meals.map(meal => {
-    return splitMeal(meal)
+    const parsedMeal = splitMeal(meal)
+    return correctPrice(parsedMeal);
   });
 
   console.log(parsedMeals);
