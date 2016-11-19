@@ -1,9 +1,17 @@
 import React, { Component } from "react";
-import { StyleSheet, Text, View, Dimensions, TouchableHighlight, ScrollView } from "react-native";
-import ImagePicker from "react-native-image-crop-picker";
+import {
+  StyleSheet,
+  Text,
+  View,
+  Dimensions,
+  TouchableHighlight,
+  ScrollView,
+  Image
+} from "react-native";
 import ProgressHUD from "react-native-progress-hud";
 import DropdownAlert from "react-native-dropdownalert";
 import Icon from "react-native-vector-icons/Ionicons";
+import GIcon from "react-native-vector-icons/MaterialIcons";
 import NavigationBar from "./NavigationBar";
 import Accordion from "react-native-collapsible/Accordion";
 import * as Animatable from "react-native-animatable";
@@ -55,8 +63,10 @@ const DATA = {
 const styles = StyleSheet.create({
     container : {
       flex : 1,
-      justifyContent : 'center',
-      alignItems : 'center',
+    },
+    bottom : {
+      height : 40,
+      backgroundColor : 'orange',
     },
     label : {
       fontSize : 20,
@@ -66,7 +76,6 @@ const styles = StyleSheet.create({
       width : 80,
       height : 80,
       borderRadius : 40,
-      marginBottom : 10,
       backgroundColor : 'orange',
       justifyContent : 'center',
       alignItems : 'center',
@@ -75,23 +84,47 @@ const styles = StyleSheet.create({
       fontSize : 50,
       color : 'white',
     },
+    foodArray : {
+      paddingHorizontal : 20,
+      paddingVertical : 5
+    },
     foodRow : {
       flexDirection : 'row',
+      alignItems : 'center',
       borderBottomWidth : 1,
       borderColor : 'orange',
       height : 60,
     },
     foodRowTitle : {
+      fontSize : 18,
+      fontFamily : 'Montserrat-regular',
+      color : '#666'
+    },
+    foodRowLabel : {
+      borderRightWidth : 1,
+      borderColor : 'orange',
+    },
+    foodRowLeft : {
       width : 150,
       borderRightWidth : 1,
       borderColor : 'orange',
       alignItems : 'center',
       justifyContent : 'center',
     },
-    foodRowLabel : {
+    foodRowRight : {
       flex : 1,
-      borderRightWidth : 1,
-      borderColor : 'orange',
+      flexDirection : 'row',
+      alignItems : 'center',
+      justifyContent : 'center',
+    },
+    foodRowValue : {
+      color : '#777',
+      fontSize : 26,
+      fontFamily : 'Montserrat-regular',
+    },
+    foodRowIcon : {
+      width : 32,
+      height : 32
     }
   })
   ;
@@ -128,6 +161,7 @@ class Home extends Component {
       showHelp : false,
       isLoading : false,
       plates : mock.slice(),
+      chosen : [],
     }
   }
 
@@ -138,7 +172,7 @@ class Home extends Component {
 
   render() {
     return (
-      <View style={{flex:1}}>
+      <View style={styles.container}>
         <NavigationBar
           title={"Know your food"}
           left={[
@@ -149,12 +183,23 @@ class Home extends Component {
           ]}
           right={[
             {
-                name:'home',
+                name:'settings',
+                handler:()=>this.setState({showHelp:true})
+             },
+            this.state.chosen.length === 0 ? null : {
+                name:'heart',
                 handler:()=>this.setState({showHelp:true})
              }
           ]}
         />
         {this.renderListView()}
+        <ProgressHUD
+          isVisible={this.state.isLoading}
+          isDismissible={false}
+          overlayColor="rgba(0, 0, 0, 0.11)"
+        />
+        <DropdownAlert ref={dp => this.dropdown = dp}/>
+        <View style={styles.bottom}/>
         <View style={{position:'absolute', bottom:0,left:0, right:0, alignItems:'center'}}>
           <TouchableHighlight
             underlayColor="transparent"
@@ -166,12 +211,6 @@ class Home extends Component {
             </View>
           </TouchableHighlight>
         </View>
-        <ProgressHUD
-          isVisible={this.state.isLoading}
-          isDismissible={false}
-          overlayColor="rgba(0, 0, 0, 0.11)"
-        />
-        <DropdownAlert ref={dp => this.dropdown = dp}/>
       </View>
     );
   }
@@ -210,7 +249,7 @@ class Home extends Component {
             </Text>
           </View>
           <View style={{justifyContent:'center', marginLeft:10}}>
-            <Text style={{fontFamily:'Montserrat-regular', fontSize:22}}>
+            <Text style={{fontFamily:'Montserrat-regular', fontSize:22, color:'#777'}}>
               {r.price.toFixed(2)}
             </Text>
           </View>
@@ -234,28 +273,56 @@ class Home extends Component {
         duration={300}
         transition="backgroundColor"
         style={{ backgroundColor: (isActive ? 'rgba(255,255,255,1)' : 'rgba(245,252,255,1)') }}>
-        {this.renderArray(array)}
+        {this.renderArray(section, array)}
       </Animatable.View>
     );
   }
 
-  renderArray(values) {
+  renderArray(plate, values) {
     return (
-      <View>
-        {Object.keys(values).map(k => this.renderFoodRow(DATA[k], values[k]))}
+      <View style={styles.foodArray}>
+        {Object.keys(values).map((k, i) => this.renderFoodRow({
+          ...DATA[k],
+          value : values[k],
+          last : Object.keys(values).length - 1 === parseInt(i)
+        }))}
+        <TouchableHighlight
+          underlayColor="transparent"
+          onPress={()=>this.handleSelection(plate)}
+        >
+          <View
+            style={{marginVertical:10, height:40,backgroundColor:'orange', alignItems:'center', justifyContent:'center'}}>
+            <GIcon name={`favorite${this.state.chosen.indexOf(plate) === -1 ? '-border' : ''}`}
+                   style={{color:'white', fontSize:30}}/>
+          </View>
+        </TouchableHighlight>
       </View>
     )
   }
 
-  renderFoodRow({ title }) {
+
+  renderFoodRow({ icon, name, unit, value, last }) {
+    const range = Math.floor(Math.random() * 3);
+    console.log(range);
     return (
-      <View style={styles.foodRow}>
-        <Text style={styles.foodRowTitle}>
-          {title}
-        </Text>
-        <Text style={styles.foodRowTitle}>
-          {title}
-        </Text>
+      <View style={[styles.foodRow, {borderBottomWidth:last ? 0:1}]} key={icon}>
+        <View style={styles.foodRowLeft}>
+          <Image source={icon} style={styles.foodRowIcon}/>
+          <Text style={styles.foodRowTitle}>
+            {name.toLocaleUpperCase()}
+          </Text>
+        </View>
+        <View style={styles.foodRowRight}>
+          <View style={[styles.foodRowRight, {justifyContent:'flex-end'}]}>
+            <Text style={styles.foodRowValue}>
+              {`${value} ${unit}`}
+            </Text>
+          </View>
+          <View style={styles.foodRowRight}>
+            <GIcon name={`sentiment-${range===0?'neutral':range===1?'dissatisfied':'satisfied'}`}
+                   style={{color:range===0?'#666':range===1?'red':'green', fontSize:30}}/>
+          </View>
+        </View>
       </View>
     );
   }
@@ -269,9 +336,21 @@ class Home extends Component {
     };
     RNS3.put(file, uploadOptions)
         .then(response => {
-          const imgUrl = `http://163.172.173.89:56792/docker/${name}`;
-          console.log(response.body, imgUrl);
-          fetch(`http://128.179.178.198:3000/image?image=${imgUrl}`)
+          const imgUrl = `
+  http://163.172.173.89:56792/docker/${name}`;
+          console.log
+                 (
+                   response
+                     .body
+                   ,
+                   imgUrl
+                 )
+          ;
+          fetch(
+            `http://128.179.178.198:3000/image?image=$ {
+  imgUrl
+}
+`)
             .then(x => {
               console.log(x);
               this.setState({ isLoading : false });
@@ -296,6 +375,16 @@ class Home extends Component {
     });
   }
 
+  handleSelection(plate) {
+    let chosen = this.state.chosen;
+    const idx = chosen.indexOf(plate);
+    if (idx === -1) {
+      chosen.push(plate);
+    } else {
+      chosen.splice(idx, 1)
+    }
+    this.setState({ chosen });
+  }
 }
 
 export default Home;

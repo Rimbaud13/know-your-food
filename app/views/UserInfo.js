@@ -1,5 +1,5 @@
 import React, {Component} from "react";
-import {StyleSheet, Text, View, TextInput} from "react-native";
+import {AsyncStorage, StyleSheet, Text, View, TextInput} from "react-native";
 
 const styles = StyleSheet.create({
     container: {
