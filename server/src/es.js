@@ -20,10 +20,10 @@ async function search(values: array<string>) {
   return _.zipObject(values, res.responses.map(x => _.head(x.hits.hits.map(x => x._source))));
 }
 
-/*
-search(['lasagne', 'pate']).then(res => {
-  console.log(res['pate'])
-});
-*/
+
+/* search(['margherita', 'sauce tomate maison et mozarella']).then(res => {
+  console.log(res)
+}); */
+
 
 export default search;

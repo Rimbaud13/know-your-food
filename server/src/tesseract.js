@@ -1,4 +1,6 @@
+import search from './es'
 let request = require('request')
+import _ from "lodash";
 
 export default function imageProcess(url) {
 
@@ -28,7 +30,10 @@ export default function imageProcess(url) {
                     }
                 }
                 console.log(tex);
-                parse(tex);
+
+                /* const meals = parse(text);
+                 const result = searchMeals(meals);
+                 return result; */
             }
         }
     );
@@ -36,8 +41,48 @@ export default function imageProcess(url) {
 }
 
 const text = "MARGHERITA\nuce totnate maison et tnozzarella.\nRUCOLA\nRoquette, partnesan, sauce totnate maison.\nSALAME\nSalami Napoli sur notre sauce tomate\nmaison et mozzarella.\nFUNGHI\nChampignons frais, sauce tomate\nmaison et mozzarella.\n\n16,50\n17,00\n17,00\n17,00";
+const stopwords = ["quelle", "est", "ses", "etat", "avec", "mais", "elle", "que", "maintenant", "nommes", "devrait", "moins", "eu", "ton", "où", "quel", "par", "tu", "leur", "en", "chaque", "pourquoi", "debut", "tes", "ces", "plupart", "ta", "sur", "ça", "ce", "sujet", "ou", "peut", "ni", "nommés", "notre", "avoir", "fait", "ils", "car", "peu", "fois", "qui", "bon", "seulement", "elles", "ici", "votre", "sien", "doit", "quels", "meme", "essai", "donc", "trop", "alors", "mon", "sans", "les", "des", "voient", "vont", "cela", "nous", "vous", "le", "étions", "dehors", "ceux", "dans", "tandis", "faites", "soyez", "sous", "juste", "quelles", "parce", "ci", "tout", "du", "encore", "dedans", "comment", "aussi", "mot", "pas", "mine", "aucuns", "pour", "son", "etre", "quand", "si", "état", "je", "être", "hors", "tellement", "au", "ete", "il", "avant", "ma", "font", "comme", "étaient", "tous", "dos", "depuis", "etions", "la", "là", "tels", "très", "vu", "tres", "même", "et", "sa", "etaient", "sont", "été", "début", "autre", "mes"];
 
-parse(text);
+const meals = parse(text);
+searchMeals(meals).then(res =>{
+    console.log(res);
+});
+
+async function searchMeals(meals) {
+
+    let result = [];
+
+    for (let meal of meals) {
+        const o = {name: meal.name, price: meal.price, description: meal.description};
+
+        const terms = [meal.name].push(preprocess(meal.description));
+        o.values = await search(terms);
+        result.push(o);
+    }
+
+    return result;
+
+}
+
+function preprocess(description) {
+    const nbDescr = description.length;
+    let counter = 0;
+    let terms = [];
+    let tmpTerm = "";
+    while (counter < nbDescr) {
+        if (stopwords.includes(description[counter])) {
+            terms.push(tmpTerm);
+            tmpTerm = "";
+        } else {
+            tmpTerm = tmpTerm + " " + description[counter];
+        }
+        counter++;
+    }
+    if (!stopwords.includes(tmpTerm))
+        terms.push(tmpTerm);
+
+    return terms;
+}
 
 function parse(text) {
 
@@ -67,7 +112,7 @@ function parse(text) {
             line.split(" ").forEach(x => description.push(x));
         }
 
-        console.log(line);
+        // console.log(line);
 
         if (isan) {
             if (name !== "") {
@@ -82,6 +127,7 @@ function parse(text) {
 
     }
 
-    console.log(array);
+    // console.log(array);
+    return array;
 
 }
