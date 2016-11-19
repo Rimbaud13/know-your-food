@@ -1,0 +1,31 @@
+{
+  "name": "know-your-food",
+  "private": true,
+  "version": "1.0.0",
+  "devDependencies": {
+    "babel-preset-latest": "^6.16.0",
+    "eslint": "^3.8.1",
+    "eslint-config-airbnb": "^12.0.0",
+    "eslint-plugin-import": "^2.0.1",
+    "eslint-plugin-jsx-a11y": "^2.2.3",
+    "eslint-plugin-react": "^6.4.1",
+    "flow-bin": "^0.33.0",
+    "grunt": "^1.0.1",
+    "grunt-babel": "^6.0.0",
+    "grunt-contrib-clean": "^1.0.0",
+    "grunt-contrib-watch": "^1.0.0",
+    "grunt-express-server": "^0.5.3",
+    "babel-eslint": "^7.0.0",
+    "babel-plugin-transform-flow-strip-types": "^6.14.0",
+    "load-grunt-tasks": "^3.5.2"
+  },
+  "scripts": {
+    "start": "node build/app.js",
+    "lint": "eslint --fix src/**/*.js",
+    "flow": "flow; test $? -eq 0 -o $? -eq 2"
+  },
+  "dependencies": {
+    "express": "^4.14.0",
+    "lodash": "^4.16.4"
+  }
+}
