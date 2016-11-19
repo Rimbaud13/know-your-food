@@ -22,8 +22,8 @@ app.get('/', (req, res) => {
 app.all('/image', (req, res) => {
 
     var url = req.query.image;
-    imageProcess(url);
-    res.send("yolo");
+    const result = imageProcess(url);
+    res.send(result);
 
 });
 
