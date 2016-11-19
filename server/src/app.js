@@ -7,12 +7,11 @@ const PORT = 3000;
 
 const app = express();
 
-app.all('/hash', (req, res) => {
-  const hash = req.body.password === undefined ? '' : sha256(req.body.password);
-  res.send(`<form action="/hash" method="post">${hash}<input type="password" name="password"><input type="submit" value="Hash"/></form>`);
+app.get('/', (req, res) => {
+  res.send('hello');
 });
 
 app.listen(PORT, () => {
-  console.log('Running...'); // eslint-disable-line no-console
+  console.log('Running...');
 });
 
