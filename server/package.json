@@ -5,7 +5,6 @@
   "devDependencies": {
     "babel-cli": "^6.18.0",
     "babel-eslint": "^7.0.0",
-    "babel-node": "^6.5.2",
     "babel-plugin-transform-flow-strip-types": "^6.14.0",
     "babel-preset-latest": "^6.16.0",
     "eslint": "^3.8.1",
@@ -24,6 +23,7 @@
   "scripts": {
     "start": "node build/app.js",
     "tess": "babel-node src/tesseract.js",
+    "es": "babel-node src/es.js",
     "lint": "eslint --fix src/**/*.js",
     "flow": "flow; test $? -eq 0 -o $? -eq 2"
   },
