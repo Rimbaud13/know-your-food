@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import { StyleSheet, Text, View } from "react-native";
+import NavigationBar from "./NavigationBar";
 
 const styles = StyleSheet.create({
   container : {
@@ -13,7 +14,7 @@ const styles = StyleSheet.create({
   },
 });
 
-class Tesseract extends Component {
+class Help extends Component {
   render() {
     return (
       <View style={{flex:1}}>
@@ -36,4 +37,4 @@ class Tesseract extends Component {
   }
 }
 
-export default Tesseract;
+export default Help;

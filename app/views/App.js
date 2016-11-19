@@ -1,7 +1,7 @@
 'use strict';
 
 import React from "react";
-import { Navigator, View } from "react-native";
+import { Navigator, View, StatusBar } from "react-native";
 import Routes from "./Routes";
 
 class App extends React.Component {
@@ -17,6 +17,7 @@ class App extends React.Component {
   render() {
     return (
       <View style={{flex:1}}>
+        <StatusBar barStyle="light-content"/>
         <Navigator
           initialRoute={ this.state.initialRoute }
           renderScene={ (route, navigator) => <route.component navigator={ navigator }  />}

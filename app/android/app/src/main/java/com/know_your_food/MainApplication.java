@@ -1,10 +1,10 @@
 package com.know_your_food;
 
 import android.app.Application;
-import android.util.Log;
 
 import com.facebook.react.ReactApplication;
-import com.facebook.react.ReactInstanceManager;
+import com.reactnative.ivpusic.imagepicker.PickerPackage;
+import com.oblador.vectoricons.VectorIconsPackage;
 import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
 import com.facebook.react.shell.MainReactPackage;
@@ -14,22 +14,26 @@ import java.util.List;
 
 public class MainApplication extends Application implements ReactApplication {
 
-  private final ReactNativeHost mReactNativeHost = new ReactNativeHost(this) {
-    @Override
-    protected boolean getUseDeveloperSupport() {
-      return BuildConfig.DEBUG;
-    }
+    private final ReactNativeHost mReactNativeHost = new ReactNativeHost(this) {
+        @Override
+        protected boolean getUseDeveloperSupport() {
+            return BuildConfig.DEBUG;
+        }
+
+        @Override
+        protected List<ReactPackage> getPackages() {
+            return Arrays.asList(
+                    new MainReactPackage(),
+            new PickerPackage(),
+                    new VectorIconsPackage(),
+                    new RCTCameraPackage(),
+                    new ImagePickerPackage()
+            );
+        }
+    };
 
     @Override
-    protected List<ReactPackage> getPackages() {
-      return Arrays.<ReactPackage>asList(
-          new MainReactPackage()
-      );
+    public ReactNativeHost getReactNativeHost() {
+        return mReactNativeHost;
     }
-  };
-
-  @Override
-  public ReactNativeHost getReactNativeHost() {
-      return mReactNativeHost;
-  }
 }
