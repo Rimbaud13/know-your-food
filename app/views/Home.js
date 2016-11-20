@@ -187,7 +187,7 @@ class Home extends Component {
   }
 
   componentDidMount() {
-    //this.takePicture();
+    this.takePicture();
     this.renderArray = this.renderArray.bind(this);
   }
 
