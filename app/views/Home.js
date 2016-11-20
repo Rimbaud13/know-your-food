@@ -6,7 +6,8 @@ import {
   Dimensions,
   TouchableHighlight,
   ScrollView,
-  Image
+  Image,
+  Modal
 } from "react-native";
 import ProgressHUD from "react-native-progress-hud";
 import DropdownAlert from "react-native-dropdownalert";
@@ -28,6 +29,12 @@ const uploadOptions = {
   secretKey : "b31uUyf+8CMAUxGFPG4R5UtrrnZPpRzXQooB92nj",
   successActionStatus : 201
 };
+
+const googleApiKey = "";
+
+function mkGoogleUrl(query){
+  return `https://www.googleapis.com/customsearch/v1?q=food+${query}&cx=005581394676374455442%3Afihmnxuedsw&hl=fr&num=&rights=cc_attribute&searchType=image&key=${googleApiKey}`
+}
 
 const DATA = {
   energy : {
@@ -59,6 +66,11 @@ const DATA = {
     name : 'fibers',
     unit : 'KJ',
     icon : require('../res/icons/fiber.png'),
+  },
+  proteins : {
+    name : 'proteins',
+    unit : 'KJ',
+    icon : require('../res/icons/proteins.png'),
   }
 };
 
@@ -127,6 +139,28 @@ const styles = StyleSheet.create({
     foodRowIcon : {
       width : 32,
       height : 32
+    },
+    modalContainer : {
+      flex : 1,
+      backgroundColor : 'rgba(0,0,0,0.35)'
+    },
+    firstDetailed : {
+      width : 100,
+      height : 68,
+      paddingHorizontal : 3,
+      borderRightWidth : 1,
+      borderColor : '#BBB',
+      justifyContent : 'center',
+      alignItems : 'center',
+    },
+    secondDetailed : {
+      width : 70,
+      paddingHorizontal : 3,
+      height : 68,
+      borderRightWidth : 1,
+      borderColor : '#BBB',
+      justifyContent : 'center',
+      alignItems : 'center',
     }
   })
   ;
@@ -135,7 +169,21 @@ const mock = [
   {
     name : "MARGHERITA",
     price : 16.50,
-    description : ["Sauce", "tomate", "maison", "et", "mozzarella."]
+    description : ["Sauce", "tomate", "maison", "et", "mozzarella."],
+    ingredients : [
+      {
+        name : 'ingredient1',
+        proteins : 0,
+        vitamines : 1,
+        salt : 12
+      },
+      {
+        name : 'ingredient2',
+        proteins : 10,
+        vitamines : 0,
+        salt : 1
+      }
+    ]
   },
   {
     name : "RUCO LA",
@@ -164,6 +212,7 @@ class Home extends Component {
       isLoading : false,
       plates : mock.slice(),
       chosen : [],
+      details : -1,
     }
   }
 
@@ -213,6 +262,7 @@ class Home extends Component {
             </View>
           </TouchableHighlight>
         </View>
+        {this.renderModal()}
       </View>
     );
   }
@@ -267,19 +317,21 @@ class Home extends Component {
       vitamines : 3,
       fat : 4,
       sugar : 5,
-      fiber : 6
+      fiber : 6,
+      proteins : 0
     };
+
     return (
       <Animatable.View
         duration={300}
         transition="backgroundColor"
         style={{ backgroundColor: (isActive ? 'rgba(255,255,255,1)' : 'rgba(245,252,255,1)') }}>
-        {this.renderArray(section, array)}
+        {this.renderArray(section, array, parseInt(i))}
       </Animatable.View>
     );
   }
 
-  renderArray(plate, values) {
+  renderArray(plate, values, i) {
     return (
       <View style={styles.foodArray}>
         {Object.keys(values).map((k, i) => this.renderFoodRow({
@@ -287,16 +339,30 @@ class Home extends Component {
           value : values[k],
           last : Object.keys(values).length - 1 === parseInt(i)
         }))}
-        <TouchableHighlight
-          underlayColor="transparent"
-          onPress={()=>this.handleSelection(plate)}
-        >
-          <View
-            style={{marginVertical:10, height:40,backgroundColor:'orange', alignItems:'center', justifyContent:'center'}}>
-            <GIcon name={`favorite${this.state.chosen.indexOf(plate) === -1 ? '-border' : ''}`}
-                   style={{color:'white', fontSize:30}}/>
-          </View>
-        </TouchableHighlight>
+        <View style={{flexDirection:'row'}}>
+          <TouchableHighlight
+            underlayColor="transparent"
+            onPress={()=>this.setState({details:i})}
+            style={{flex:1}}
+          >
+            <View
+              style={{flex:1, marginVertical:10,marginRight:5, height:40,backgroundColor:'orange', alignItems:'center', justifyContent:'center'}}>
+              <GIcon name="view-list"
+                     style={{color:'white', fontSize:30}}/>
+            </View>
+          </TouchableHighlight>
+          <TouchableHighlight
+            underlayColor="transparent"
+            onPress={()=>this.handleSelection(plate)}
+            style={{flex:1}}
+          >
+            <View
+              style={{flex:1,marginVertical:10,marginLeft:5, height:40,backgroundColor:'orange', alignItems:'center', justifyContent:'center'}}>
+              <GIcon name={`favorite${this.state.chosen.indexOf(plate) === -1 ? '-border' : ''}`}
+                     style={{color:'white', fontSize:30}}/>
+            </View>
+          </TouchableHighlight>
+        </View>
       </View>
     )
   }
@@ -325,6 +391,34 @@ class Home extends Component {
         </View>
       </View>
     );
+  }
+
+  renderModal() {
+    if (this.state.details === -1) {
+      return null;
+    }
+    const p = this.state.plates[this.state.details];
+    console.log(this.state.plates, p, this.state.details);
+    return (
+      <Modal
+        animationType="slide"
+        transparent
+        visible
+      >
+        <View style={styles.modalContainer}>
+          <NavigationBar
+            title={p.name}
+            left={[
+             {
+                name:'close',
+                handler:()=>this.setState({details:-1})
+             }
+          ]}
+          />
+          {this.renderDetailedArray(p)}
+        </View>
+      </Modal>
+    )
   }
 
   uploadImg(path, name) {
@@ -380,6 +474,71 @@ class Home extends Component {
       chosen.splice(idx, 1)
     }
     this.setState({ chosen });
+  }
+
+  renderDetailedArray(p) {
+    return (
+      <ScrollView
+        horizontal
+      >
+        <ScrollView>
+          <View style={styles.foodArray}>
+            {this.renderFoodHeader()}
+            {Object.keys(p.ingredients).map((k, i) =>
+              this.renderDetailedFoodRow(p.ingredients[k],
+                Object.keys(p.ingredients).length - 1 === parseInt(i)))}
+          </View>
+        </ScrollView>
+      </ScrollView>
+    )
+  }
+
+  renderFoodHeader() {
+    return (
+      <View
+        style={{flexDirection:'row', borderBottomWidth:1, borderColor:'#CCC', backgroundColor:'white'}}>
+        <View style={styles.firstDetailed}/>
+        {Object.keys(DATA).map(k => this.renderFoodHeaderIcon(DATA[k]))}
+      </View>
+    )
+  }
+
+  renderFoodHeaderIcon({ name, unit, icon }) {
+    return (
+      <View key={icon} style={styles.secondDetailed}>
+        <Image source={icon} style={{width:30, height:30}}/>
+        <Text style={{fontFamily:'Montserrat-regular', color:'#AAA'}} numberOfLines={1}>
+          {name.toLocaleUpperCase()}
+        </Text>
+        <Text style={{fontFamily:'Montserrat-ultralight', fontSize:14, color:'#AAA'}}
+              numberOfLines={1}>
+          {`(${unit.toLocaleUpperCase()})`}
+        </Text>
+      </View>
+    )
+  }
+
+  renderDetailedFoodRow(p, isLast) {
+    console.log(p);
+
+    const ingredients = Object.keys(DATA).map(k => (
+      <View key={k} style={styles.secondDetailed}>
+        <Text style={{fontFamily:'Montserrat-regular', color:'#AAA'}} numberOfLines={1}>
+          {p[k] || 0}
+        </Text>
+      </View>
+    ));
+    return (
+      <View
+        style={{flexDirection:'row', borderBottomWidth:isLast ? 0 : 1, borderColor:'#CCC', backgroundColor:'white'}}>
+        <View style={styles.firstDetailed}>
+          <Text style={{textAlign:'center', fontFamily:'Montserrat-regular', color:'#999'}} numberOfLines={2}>
+            {p.name.toLocaleUpperCase()}
+          </Text>
+        </View>
+        {ingredients}
+      </View>
+    );
   }
 }
 
