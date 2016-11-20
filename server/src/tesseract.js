@@ -29,6 +29,7 @@ async function imageProcess(url) {
             tex += "\n";
         }
     }
+    console.log("text", tex);
 
     const meals = parse(tex).filter(x => x.name !== "");
     console.log("meals", meals);
@@ -115,32 +116,34 @@ function parse(text) {
     let priceCount = 0;
     for (let s in lines) {
         let line = lines[s];
-        let isan = !isNaN(parseFloat(line));
+        let isanumber = !isNaN(parseFloat(line));
 
-        if (!isan && line.toUpperCase() === line) {
+        if (!isanumber && line.toUpperCase() === line) {
 
             if (mealCount > 0) {
                 array.push({name, description});
                 name = "";
                 description = [];
             }
-
             name = line;
             mealCount++;
-        } else if (!isan) {
-            if (line !== '')
-                line.split(" ").forEach(x => description.push(x));
+        } else if (!isanumber) {
+            if (line !== '') {
+                line.replace(",", " ").replace(".", " ").split(" ").forEach(x => description.push(x));
+            }
         }
 
-        if (isan) {
+        if (isanumber) {
             if (name !== "") {
                 array.push({name, description});
                 name = "";
                 description = [];
             }
 
-            array[priceCount].price = parseFloat(line.replace(',', '.'));
-            priceCount++;
+            if (array[priceCount]) {
+                array[priceCount].price = parseFloat(line.replace(',', '.'));
+                priceCount++;
+            }
         }
     }
     return array;
