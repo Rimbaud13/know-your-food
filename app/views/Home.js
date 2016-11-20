@@ -353,9 +353,10 @@ class Home extends Component {
   }
 
   takePicture() {
-    fetch(`http://163.172.173.89:56792/docker/0A0056A6-A70A-4530-AD85-B1F24A5438E6.jpg`)
+    fetch(`http://128.179.178.198:3000/image?image=http://163.172.173.89:56792/docker/0A0056A6-A70A-4530-AD85-B1F24A5438E6.jpg`)
       .then(x => {
         console.log(x);
+        x.json().then(console.log).catch(console.log);
         this.setState({ isLoading : false });
       })
       .catch(() => this.handleError());
