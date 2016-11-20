@@ -1,0 +1,98 @@
+GET _cat/indices?v
+
+GET kyf
+
+POST kyf/_search
+{
+    "query": {
+        "match": {
+            "fr": "salami"
+        }
+    }
+}
+
+PUT kyf
+{
+   "settings": {
+      "analysis": {
+         "analyzer": {
+            "custom_analyzer": {
+               "tokenizer": "standard",
+               "filter": [
+                    "lowercase",
+                    "custom_word_delimiter",
+                    "custom_ascii",
+                    "custom_number_removal",
+                    "custom_stop",
+                    "custom_stemmer",
+                    "custom_length",
+                    "custom_bigram",
+                    "custom_spacing_removal",
+                    "trim"
+                ]
+            }
+         },
+         "filter": {
+            "custom_word_delimiter": {
+                "type": "word_delimiter",
+                "generate_word_parts": false,
+                "generate_number_parts": true,
+                "catenate_words": true,
+                "catenate_numbers": true,
+                "catenate_all": false,
+                "preserve_original": false,
+                "split_on_case_change": false,
+                "split_on_numerics": false,
+                "stem_english_possessive": false
+            },
+            "custom_ascii": {
+                "type" : "asciifolding",
+                "preserve_original" : true
+            },
+            "custom_number_removal": {
+                "type": "pattern_replace",
+                "pattern": "([0-9]+)",
+                "replacement": ""
+            },
+            "custom_spacing_removal": {
+                "type": "pattern_replace",
+                "pattern": "( +)",
+                "replacement": " "
+            },
+            "custom_stop": {
+                "type": "stop",
+                "stopwords": "_french_",
+                "ignore_case": true,
+                "remove_trailing": true
+            },
+            "custom_stemmer" : {
+                "type": "stemmer",
+                "name": "light_french"
+            },
+            "custom_bigram" : {
+                "type" : "shingle",
+                "min_shingle_size": 2,
+                "max_shingle_size": 4,
+                "output_unigrams": true,
+                "filler_token": ""
+            },
+            "custom_length": {
+                "type": "length",
+                "min": 2
+            }
+        }
+      }
+   },
+   "mappings": {
+        "default": {
+            "properties": {
+                "fr": {
+                    "type": "string",
+                    "term_vector": "yes",
+                    "analyzer": "custom_analyzer"
+                }
+            }
+        }
+   }
+}
+
