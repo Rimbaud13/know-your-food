@@ -1,8 +1,6 @@
-import search from './es'
-let request = require('request-promise')
-const util = require('util')
-import _ from "lodash";
-
+import search from './es';
+import util from 'util';
+import request from "request-promise";
 
 async function imageProcess(url) {
 
