@@ -490,7 +490,7 @@ class Home extends Component {
           console.log(response.body, imgUrl);
 
 
-          fetch(`http://128.179.178.198:3000/image?image=${imgUrl}`)
+          fetch(`http://kyf.scapp.io:3000/image?image=${imgUrl}`)
             .then(x => {
               console.log(x);
               this.setState({ isLoading : false });
