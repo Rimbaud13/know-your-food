@@ -1,7 +1,7 @@
 'use strict';
 
 import React from "react";
-import { Navigator, View, StatusBar, AsyncStorage } from "react-native";
+import { Image, Navigator, View, StatusBar, AsyncStorage, Dimensions } from "react-native";
 import Routes from "./Routes";
 
 class App extends React.Component {
@@ -19,7 +19,7 @@ class App extends React.Component {
       console.log(v);
       if (Object.keys(v).map(k => v[k]).indexOf(null) === -1) {
         this.setState({ initialRoute : Routes.Home });
-      }else{
+      } else {
         this.setState({ initialRoute : Routes.start });
       }
     });
@@ -27,8 +27,10 @@ class App extends React.Component {
 
   render() {
     if (this.state.initialRoute === undefined) {
+      const d = Dimensions.get('window');
       return (
-        <View style={{flex:1, backgroundColor:'orange'}}/>
+        <Image source={require('../res/icons/launchscreen.png')}
+               style={{width:d.width, height:d.height}}/>
       );
     }
     return (
