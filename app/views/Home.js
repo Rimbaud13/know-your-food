@@ -12,10 +12,12 @@ import ProgressHUD from "react-native-progress-hud";
 import DropdownAlert from "react-native-dropdownalert";
 import Icon from "react-native-vector-icons/Ionicons";
 import GIcon from "react-native-vector-icons/MaterialIcons";
+import ImagePicker from "react-native-image-crop-picker";
 import NavigationBar from "./NavigationBar";
 import Accordion from "react-native-collapsible/Accordion";
 import * as Animatable from "react-native-animatable";
 import { RNS3 } from "react-native-aws3";
+import Routes from "./Routes";
 
 
 const uploadOptions = {
@@ -65,7 +67,7 @@ const styles = StyleSheet.create({
       flex : 1,
     },
     bottom : {
-      height : 40,
+      height : 50,
       backgroundColor : 'orange',
     },
     label : {
@@ -184,7 +186,7 @@ class Home extends Component {
           right={[
             {
                 name:'settings',
-                handler:()=>this.setState({showHelp:true})
+                handler:()=>this.props.navigator.push(Routes.UserInfo)
              },
             this.state.chosen.length === 0 ? null : {
                 name:'heart',
@@ -259,7 +261,6 @@ class Home extends Component {
   }
 
   _renderContent(section, i, isActive) {
-    console.log(section, isActive);
     const array = {
       energy : 1,
       salt : 2,
@@ -303,7 +304,6 @@ class Home extends Component {
 
   renderFoodRow({ icon, name, unit, value, last }) {
     const range = Math.floor(Math.random() * 3);
-    console.log(range);
     return (
       <View style={[styles.foodRow, {borderBottomWidth:last ? 0:1}]} key={icon}>
         <View style={styles.foodRowLeft}>
@@ -365,6 +365,17 @@ class Home extends Component {
   }
 
   takePicture() {
+    const imgUrl = `http://163.172.173.89:56792/docker/0A0056A6-A70A-4530-AD85-B1F24A5438E6.jpg`;
+    fetch(`http://128.179.178.198:3000/image?image=${imgUrl}`)
+      .then(x => {
+        console.log(x);
+        x.json().then(console.log).catch(console.log);
+        this.setState({ isLoading : false });
+      })
+      .catch(() => this.handleError());
+
+    /*
+
     ImagePicker.openCamera({
       width : 1000,
       height : 1000,
@@ -373,6 +384,7 @@ class Home extends Component {
       console.log(image);
       this.uploadImg(image.path, image.path.substring(image.path.lastIndexOf("/") + 1));
     });
+    */
   }
 
   handleSelection(plate) {

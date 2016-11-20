@@ -7,7 +7,7 @@ const Routes = {
   Home,
   UserInfo,
 
-  start : Home,
+  start : UserInfo,
 };
 
 for (const component in Routes) {
