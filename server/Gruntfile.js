@@ -5,9 +5,14 @@ module.exports = grunt => {
   grunt.initConfig({
     babel: {
       build: {
-        files: {
-          'build/app.js': 'src/app.js'
-        }
+        files: [
+              {
+                expand: true,
+                cwd: 'src',
+                src: '**/*.js',
+                dest: 'build'
+              }
+            ]
       }
     },
     express: {

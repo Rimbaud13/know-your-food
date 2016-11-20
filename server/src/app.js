@@ -1,24 +1,33 @@
 // @flow
-
+import 'babel-polyfill'
 import express from 'express';
-import fileUpload from 'express-fileupload';
-import _ from 'lodash';
+var bodyParser = require('body-parser')
+import imageProcess from './tesseract';
 
 const PORT = 3000;
 
 const app = express();
 
-app.use(fileUpload());
+app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
+    extended: true
+}));
 
 app.get('/', (req, res) => {
-  res.send('hello');
+    res.send('hello');
 });
 
-app.post('/image', (req, res) => {
-  console.log(req.files);
-  res.send('route');
+app.all('/image', (req, res) => {
+
+    var url = req.query.image;
+    console.log("url", url);
+    imageProcess(url).then(result => {
+        console.log("finished");
+        res.send(result);
+        console.log("end");
+    });
+
 });
 
 app.listen(PORT, () => {
-  console.log('Running...');
+    console.log('Running...');
 });

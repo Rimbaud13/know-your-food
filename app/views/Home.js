@@ -30,53 +30,60 @@ const uploadOptions = {
   successActionStatus : 201
 };
 
-const googleApiKey = "";
-
-function mkGoogleUrl(query){
-  return `https://www.googleapis.com/customsearch/v1?q=food+${query}&cx=005581394676374455442%3Afihmnxuedsw&hl=fr&num=&rights=cc_attribute&searchType=image&key=${googleApiKey}`
-}
-
 const DATA = {
+  proteins : {
+    name : 'proteins',
+    unit : 'g',
+    max : 50,
+    icon : require('../res/icons/proteins.png'),
+  },
   energy : {
     name : 'energy',
+    fr : "Énergie",
     unit : 'KJ',
+    max : 8400,
     icon : require('../res/icons/energy.png'),
   },
   salt : {
     name : 'salt',
-    unit : 'KJ',
+    fr : "Sel",
+    unit : 'g',
+    max : 90,
     icon : require('../res/icons/salt.png'),
-  },
-  vitamines : {
-    name : 'vitamines',
-    unit : 'KJ',
-    icon : require('../res/icons/vitamines.png'),
   },
   fat : {
     name : 'fat',
-    unit : 'KJ',
+    fr : "Matières grasses",
+    unit : 'g',
+    max : 70,
     icon : require('../res/icons/fat.png'),
   },
   sugar : {
     name : 'sugar',
-    unit : 'KJ',
+    fr : "Sucres",
+    unit : 'g',
+    max : 90,
     icon : require('../res/icons/sugar.png'),
   },
   fiber : {
     name : 'fibers',
-    unit : 'KJ',
+    fr : "Fibres alimentaires",
+    unit : 'g',
+    max : 30,
     icon : require('../res/icons/fiber.png'),
-  },
-  proteins : {
-    name : 'proteins',
-    unit : 'KJ',
-    icon : require('../res/icons/proteins.png'),
   }
 };
 
 const styles = StyleSheet.create({
     container : {
       flex : 1,
+    },
+    preview : {
+      flex : 1,
+      justifyContent : 'flex-end',
+      alignItems : 'center',
+      height : Dimensions.get('window').height,
+      width : Dimensions.get('window').width
     },
     bottom : {
       height : 50,
@@ -165,43 +172,6 @@ const styles = StyleSheet.create({
   })
   ;
 
-const mock = [
-  {
-    name : "MARGHERITA",
-    price : 16.50,
-    description : ["Sauce", "tomate", "maison", "et", "mozzarella."],
-    ingredients : [
-      {
-        name : 'ingredient1',
-        proteins : 0,
-        vitamines : 1,
-        salt : 12
-      },
-      {
-        name : 'ingredient2',
-        proteins : 10,
-        vitamines : 0,
-        salt : 1
-      }
-    ]
-  },
-  {
-    name : "RUCO LA",
-    price : 17.00,
-    description : ["Roquette,", "parmesan,", "sauce", "tomate", "maison."]
-  },
-  {
-    name : "SALAME",
-    price : 17.00,
-    description : ["Salami", "Napoli", "sur", "notre", "sauce", "tomate", "maison", "et", "mozzarella."]
-  },
-  {
-    name : "FUNGHI",
-    price : 17.00,
-    description : ["Champignons", "frais,", "sauce", "tomate", "maison", "et", "mozzarella."]
-  }
-];
-
 class Home extends Component {
 
   constructor(props) {
@@ -209,9 +179,9 @@ class Home extends Component {
 
     this.state = {
       showHelp : false,
+      showFav : false,
       isLoading : false,
-      plates : mock.slice(),
-      chosen : [],
+      plates : [],
       details : -1,
     }
   }
@@ -226,35 +196,26 @@ class Home extends Component {
       <View style={styles.container}>
         <NavigationBar
           title={"Know your food"}
-          left={[
-             {
-                name:'help-circle',
-                handler:()=>this.setState({showHelp:true})
-             }
-          ]}
           right={[
-            {
-                name:'settings',
-                handler:()=>this.props.navigator.push(Routes.UserInfo)
-             },
-            this.state.chosen.length === 0 ? null : {
-                name:'heart',
-                handler:()=>this.setState({showHelp:true})
-             }
-          ]}
+                        {
+                            name: 'settings',
+                            handler: ()=>this.props.navigator.push(Routes.UserInfo)
+                        },
+                    ]}
         />
         {this.renderListView()}
         <ProgressHUD
           isVisible={this.state.isLoading}
-          isDismissible={false}
+          isDismissible
           overlayColor="rgba(0, 0, 0, 0.11)"
         />
         <DropdownAlert ref={dp => this.dropdown = dp}/>
+        {this.renderModal()}
         <View style={styles.bottom}/>
-        <View style={{position:'absolute', bottom:0,left:0, right:0, alignItems:'center'}}>
+        <View style={{position: 'absolute', bottom: 0, left: 0, right: 0, alignItems: 'center'}}>
           <TouchableHighlight
             underlayColor="transparent"
-            style={{flex:1, alignItems:'center', justifyContent:'center'}}
+            style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}
             onPress={()=>this.takePicture()}
           >
             <View style={styles.roundButton}>
@@ -262,7 +223,122 @@ class Home extends Component {
             </View>
           </TouchableHighlight>
         </View>
-        {this.renderModal()}
+      </View>
+    );
+  }
+
+  renderListView() {
+    return (
+      <ScrollView
+        style={{flex: 1}}
+      >
+        <Accordion
+          sections={this.state.plates}
+          underlayColor="orange"
+          renderHeader={this._renderHeader.bind(this)}
+          renderContent={this._renderContent.bind(this)}
+          duration={100}
+        />
+      </ScrollView>
+    );
+  }
+
+  _renderHeader(r, index, isActive) {
+    return (
+      <Animatable.View
+        duration={100}
+        transition="backgroundColor"
+        style={{backgroundColor: (isActive ? 'rgba(255,165,0,0.15)' : 'white')}}>
+        <View
+          style={{
+                        flexDirection: 'row',
+                        paddingVertical: 16,
+                        paddingHorizontal: 5,
+                        borderBottomWidth: 1,
+                        marginHorizontal: 16,
+                        borderBottomColor: '#DDD'
+                    }}>
+          <View style={{flex: 1}}>
+            <Text style={{fontFamily: 'Montserrat-bold', fontSize: 20, color: '#666'}}>
+              {r.name}
+            </Text>
+            <Text style={{fontFamily: 'Montserrat-light', fontSize: 16, color: '#666'}}
+                  numberOfLines={1}>
+              {r.description.reduce((a, b) => `${a} ${b}`)}
+            </Text>
+          </View>
+          <View style={{justifyContent: 'center', marginLeft: 10}}>
+            <Text style={{fontFamily: 'Montserrat-regular', fontSize: 22, color: '#777'}}>
+              {r.price.toFixed(2)}
+            </Text>
+          </View>
+        </View>
+      </Animatable.View>
+    );
+  }
+
+  _renderContent(section, i, isActive) {
+    return (
+      <Animatable.View
+        duration={300}
+        transition="backgroundColor"
+        style={{backgroundColor: (isActive ? 'rgba(255,255,255,1)' : 'rgba(245,252,255,1)')}}>
+        {this.renderArray(section, this.computeSum(section))}
+      </Animatable.View>
+    );
+  }
+
+  renderArray(plate, values) {
+    return (
+      <View style={styles.foodArray}>
+        {Object.keys(values).map((k, i) => this.renderFoodRow({
+          ...DATA[k],
+          value : values[k],
+          last : Object.keys(values).length - 1 === parseInt(i)
+        }))}
+        <TouchableHighlight
+          underlayColor="transparent"
+          onPress={()=>this.handleSelection(plate)}
+        >
+          <View
+            style={{
+                            marginVertical: 10,
+                            height: 40,
+                            backgroundColor: 'orange',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}>
+            <GIcon name={`favorite${this.state.chosen.indexOf(plate) === -1 ? '-border' : ''}`}
+                   style={{color: 'white', fontSize: 30}}/>
+          </View>
+        </TouchableHighlight>
+      </View>
+    )
+  }
+
+
+  renderFoodRow({ icon, name, unit, value, last }) {
+    const range = Math.floor(Math.random() * 3);
+    return (
+      <View style={[styles.foodRow, {borderBottomWidth: last ? 0 : 1}]} key={icon}>
+        <View style={styles.foodRowLeft}>
+          <Image source={icon} style={styles.foodRowIcon}/>
+          <Text style={styles.foodRowTitle}>
+            {name.toLocaleUpperCase()}
+          </Text>
+        </View>
+        <View style={styles.foodRowRight}>
+          <View style={[styles.foodRowRight, {justifyContent: 'flex-end'}]}>
+            <Text style={styles.foodRowValue}>
+              {`${value} ${unit}`}
+            </Text>
+          </View>
+          <View style={styles.foodRowRight}>
+            <GIcon
+              name={`sentiment-${range === 0 ? 'neutral' : range === 1 ? 'dissatisfied' : 'satisfied'}`}
+              style={{color: range === 0 ? '#666' : range === 1 ? 'red' : 'green', fontSize: 30}}/>
+          </View>
+        </View>
       </View>
     );
   }
@@ -297,7 +373,7 @@ class Home extends Component {
             </Text>
             <Text style={{fontFamily:'Montserrat-light', fontSize:16, color:'#666'}}
                   numberOfLines={1}>
-              {r.description.reduce((a, b) => `${a} ${b}`)}
+              {r.description.length === 0 ? '' : r.description.reduce((a, b) => `${a} ${b}`)}
             </Text>
           </View>
           <View style={{justifyContent:'center', marginLeft:10}}>
@@ -311,22 +387,12 @@ class Home extends Component {
   }
 
   _renderContent(section, i, isActive) {
-    const array = {
-      energy : 1,
-      salt : 2,
-      vitamines : 3,
-      fat : 4,
-      sugar : 5,
-      fiber : 6,
-      proteins : 0
-    };
-
     return (
       <Animatable.View
         duration={300}
         transition="backgroundColor"
         style={{ backgroundColor: (isActive ? 'rgba(255,255,255,1)' : 'rgba(245,252,255,1)') }}>
-        {this.renderArray(section, array, parseInt(i))}
+        {this.renderArray(section, this.computeSum(section), parseInt(i))}
       </Animatable.View>
     );
   }
@@ -334,42 +400,33 @@ class Home extends Component {
   renderArray(plate, values, i) {
     return (
       <View style={styles.foodArray}>
-        {Object.keys(values).map((k, i) => this.renderFoodRow({
-          ...DATA[k],
-          value : values[k],
-          last : Object.keys(values).length - 1 === parseInt(i)
-        }))}
-        <View style={{flexDirection:'row'}}>
-          <TouchableHighlight
-            underlayColor="transparent"
-            onPress={()=>this.setState({details:i})}
-            style={{flex:1}}
-          >
-            <View
-              style={{flex:1, marginVertical:10,marginRight:5, height:40,backgroundColor:'orange', alignItems:'center', justifyContent:'center'}}>
-              <GIcon name="view-list"
-                     style={{color:'white', fontSize:30}}/>
-            </View>
-          </TouchableHighlight>
-          <TouchableHighlight
-            underlayColor="transparent"
-            onPress={()=>this.handleSelection(plate)}
-            style={{flex:1}}
-          >
-            <View
-              style={{flex:1,marginVertical:10,marginLeft:5, height:40,backgroundColor:'orange', alignItems:'center', justifyContent:'center'}}>
-              <GIcon name={`favorite${this.state.chosen.indexOf(plate) === -1 ? '-border' : ''}`}
-                     style={{color:'white', fontSize:30}}/>
-            </View>
-          </TouchableHighlight>
-        </View>
+        {Object.keys(values).map((k, i) => {
+          return this.renderFoodRow({
+            ...DATA[k],
+            value : values[k],
+            last : Object.keys(values).length - 1 === parseInt(i)
+          })
+        })}
+        <TouchableHighlight
+          underlayColor="transparent"
+          onPress={()=>this.setState({details:i})}
+          style={{flex:1}}
+        >
+          <View
+            style={{flex:1, marginVertical:10,marginRight:5, height:40,backgroundColor:'orange', alignItems:'center', justifyContent:'center'}}>
+            <GIcon name="view-list"
+                   style={{color:'white', fontSize:30}}/>
+          </View>
+        </TouchableHighlight>
       </View>
     )
   }
 
 
-  renderFoodRow({ icon, name, unit, value, last }) {
-    const range = Math.floor(Math.random() * 3);
+  renderFoodRow({ icon, max, name, unit, value, last }) {
+    const lower = 1 / 3 * max;
+    const upper = max;
+    const inside = value > lower && value < upper;
     return (
       <View style={[styles.foodRow, {borderBottomWidth:last ? 0:1}]} key={icon}>
         <View style={styles.foodRowLeft}>
@@ -385,8 +442,8 @@ class Home extends Component {
             </Text>
           </View>
           <View style={styles.foodRowRight}>
-            <GIcon name={`sentiment-${range===0?'neutral':range===1?'dissatisfied':'satisfied'}`}
-                   style={{color:range===0?'#666':range===1?'red':'green', fontSize:30}}/>
+            <GIcon name={`sentiment-${inside ? 'satisfied':'dissatisfied'}`}
+                   style={{color:inside ? 'green':'red', fontSize:30}}/>
           </View>
         </View>
       </View>
@@ -398,7 +455,6 @@ class Home extends Component {
       return null;
     }
     const p = this.state.plates[this.state.details];
-    console.log(this.state.plates, p, this.state.details);
     return (
       <Modal
         animationType="slide"
@@ -432,12 +488,58 @@ class Home extends Component {
         .then(response => {
           const imgUrl = `http://163.172.173.89:56792/docker/${name}`;
           console.log(response.body, imgUrl);
+
+
           fetch(`http://128.179.178.198:3000/image?image=${imgUrl}`)
             .then(x => {
               console.log(x);
               this.setState({ isLoading : false });
+
+              console.log(x);
+              x.json().then(res => {
+                let g = [];
+
+                // for (let meal in res) {
+                res.forEach(meal => {
+
+                  // a meal
+                  let m = {};
+                  m.name = meal.name;
+                  m.price = meal.price;
+                  m.description = meal.description;
+
+                  // array of ingredients
+                  let a = [];
+
+                  let ingredients = Object.keys(meal.values);
+
+                  ingredients.forEach(ingredient => {
+                    // an ingredient
+                    let val = { name : ingredient };
+
+                    let nutrients = meal.values[ingredient].nutrients;
+                    nutrients.forEach(nutrient => {
+                      const eng = frtoeng(nutrient.fr);
+                      if (eng !== "") {
+                        val[eng] = nutrient.per_hundred;
+                      }
+                    });
+
+                    a.push(val);
+                  });
+                  m.ingredients = a;
+                  g.push(m);
+                });
+                this.setState({ plates : g });
+
+              });
+              this.setState({ isLoading : false });
+
+
             })
             .catch(() => this.handleError());
+
+
         }).catch(() => this.handleError());
   }
 
@@ -446,15 +548,16 @@ class Home extends Component {
     this.setState({ isLoading : false });
   }
 
+  computeSum(plate) {
+    const r = {};
+    const keys = Object.keys(DATA);
+    keys.forEach(k => {
+      r[k] = plate.ingredients.map(i => i[k] || 0).reduce((a, b) => a + b, 0)
+    });
+    return r;
+  }
+
   takePicture() {
-    fetch(`http://128.179.178.198:3000/image?image=http://163.172.173.89:56792/docker/0A0056A6-A70A-4530-AD85-B1F24A5438E6.jpg`)
-      .then(x => {
-        console.log(x);
-        x.json().then(console.log).catch(console.log);
-        this.setState({ isLoading : false });
-      })
-      .catch(() => this.handleError());
-    return;
     ImagePicker.openCamera({
       width : 1000,
       height : 1000,
@@ -520,9 +623,8 @@ class Home extends Component {
 
   renderDetailedFoodRow(p, isLast) {
     console.log(p);
-
-    const ingredients = Object.keys(DATA).map(k => (
-      <View key={k} style={styles.secondDetailed}>
+    const ingredients = Object.keys(DATA).map((k, i) => (
+      <View key={i} style={styles.secondDetailed}>
         <Text style={{fontFamily:'Montserrat-regular', color:'#AAA'}} numberOfLines={1}>
           {p[k] || 0}
         </Text>
@@ -530,9 +632,11 @@ class Home extends Component {
     ));
     return (
       <View
+        key={p.name}
         style={{flexDirection:'row', borderBottomWidth:isLast ? 0 : 1, borderColor:'#CCC', backgroundColor:'white'}}>
         <View style={styles.firstDetailed}>
-          <Text style={{textAlign:'center', fontFamily:'Montserrat-regular', color:'#999'}} numberOfLines={2}>
+          <Text style={{textAlign:'center', fontFamily:'Montserrat-regular', color:'#999'}}
+                numberOfLines={2}>
             {p.name.toLocaleUpperCase()}
           </Text>
         </View>
@@ -540,6 +644,18 @@ class Home extends Component {
       </View>
     );
   }
+
+}
+
+function frtoeng(fr) {
+  const keys = Object.keys(DATA);
+  let en = "";
+  keys.forEach(k => {
+    if (DATA[k].fr === fr) {
+      en = DATA[k].name;
+    }
+  });
+  return en;
 }
 
 export default Home;

@@ -11,9 +11,11 @@
     "react-native": "0.37.0",
     "react-native-animatable": "^0.6.1",
     "react-native-aws3": "0.0.3",
+    "react-native-camera": "git+https://github.com/lwansbrough/react-native-camera.git",
     "react-native-collapsible": "git://github.com/relayfoods/react-native-collapsible.git#collapsible-not-expanding-temp-fix",
     "react-native-dropdownalert": "^2.1.0",
     "react-native-image-crop-picker": "^0.10.5",
+    "react-native-image-resizer": "0.0.12",
     "react-native-picker": "^3.0.5",
     "react-native-progress-hud": "git+https://github.com/tonyxiao/react-native-progress-hud.git",
     "react-native-vector-icons": "^3.0.0"

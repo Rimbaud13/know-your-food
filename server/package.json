@@ -3,6 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "devDependencies": {
+    "babel-cli": "^6.18.0",
     "babel-eslint": "^7.0.0",
     "babel-plugin-transform-flow-strip-types": "^6.14.0",
     "babel-preset-latest": "^6.16.0",
@@ -21,12 +22,19 @@
   },
   "scripts": {
     "start": "node build/app.js",
+    "tess": "babel-node src/tesseract.js",
+    "es": "babel-node src/es.js",
     "lint": "eslint --fix src/**/*.js",
     "flow": "flow; test $? -eq 0 -o $? -eq 2"
   },
   "dependencies": {
+    "babel-polyfill": "^6.16.0",
+    "body-parser": "^1.15.2",
+    "elasticsearch": "^12.1.0",
     "express": "^4.14.0",
     "express-fileupload": "^0.0.5",
-    "lodash": "^4.16.4"
+    "lodash": "^4.16.4",
+    "request-promise": "^4.1.1",
+    "tesseract.js": "^1.0.10"
   }
 }
