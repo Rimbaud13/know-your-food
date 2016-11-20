@@ -55,7 +55,7 @@ async function searchMeals(meals) {
 
     for (let meal of meals) {
         if (!hasNumbers(meal.name)) {
-            const o = {name: meal.name.trim(), price: meal.price, description: meal.description};
+            const o = {name: meal.name.trim(), price: meal.price ? meal.price : 0, description: meal.description};
 
             const terms = preprocess(meal.description);
             if (terms.length > 0) {
