@@ -353,6 +353,13 @@ class Home extends Component {
   }
 
   takePicture() {
+    fetch(`http://163.172.173.89:56792/docker/0A0056A6-A70A-4530-AD85-B1F24A5438E6.jpg`)
+      .then(x => {
+        console.log(x);
+        this.setState({ isLoading : false });
+      })
+      .catch(() => this.handleError());
+    return;
     ImagePicker.openCamera({
       width : 1000,
       height : 1000,
