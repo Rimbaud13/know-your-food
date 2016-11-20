@@ -1,5 +1,5 @@
 // @flow
-
+import 'babel-polyfill'
 import express from 'express';
 var bodyParser = require('body-parser')
 import imageProcess from './tesseract';
@@ -22,8 +22,12 @@ app.get('/', (req, res) => {
 app.all('/image', (req, res) => {
 
     var url = req.query.image;
-    const result = imageProcess(url);
-    res.send(result);
+    console.log("url", url);
+    imageProcess(url).then(result => {
+        console.log("finished");
+        res.send(result);
+        console.log("end");
+    });
 
 });
 
