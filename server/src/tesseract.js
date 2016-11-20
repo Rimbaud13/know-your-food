@@ -3,7 +3,6 @@ let request = require('request-promise')
 const util = require('util')
 import _ from "lodash";
 
-// const x = imageProcess("http://163.172.173.89:56792/docker/0A0056A6-A70A-4530-AD85-B1F24A5438E6.jpg");
 
 async function imageProcess(url) {
 
@@ -33,7 +32,7 @@ async function imageProcess(url) {
         }
     }
 
-    const meals = parse(text);
+    const meals = parse(tex).filter(x => x.name !== "");
     console.log("meals", meals);
 
     const result = await searchMeals(meals);
@@ -56,9 +55,9 @@ async function searchMeals(meals) {
     let result = [];
 
     for (let meal of meals) {
-        const o = {name: meal.name, price: meal.price, description: meal.description};
+        const o = {name: meal.name.trim(), price: meal.price, description: meal.description};
 
-        const terms = _.flatten([meal.name, preprocess(meal.description)]);
+        const terms = preprocess(meal.description);
         console.log(terms);
         o.values = await search(terms);
         result.push(o);
