@@ -16,6 +16,15 @@
 		076D4E1C1DE0AEB900D943DE /* RSKImageCropper.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 076D4E1A1DE0AEB900D943DE /* RSKImageCropper.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		076D4E1E1DE0AEB900D943DE /* QBImagePicker.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 076D4E1D1DE0AEB900D943DE /* QBImagePicker.framework */; };
 		076D4E1F1DE0AEB900D943DE /* QBImagePicker.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 076D4E1D1DE0AEB900D943DE /* QBImagePicker.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		076D4E371DE0BEC300D943DE /* Montserrat-Black.otf in Resources */ = {isa = PBXBuildFile; fileRef = 076D4E2F1DE0BEC300D943DE /* Montserrat-Black.otf */; };
+		076D4E381DE0BEC300D943DE /* Montserrat-Bold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 076D4E301DE0BEC300D943DE /* Montserrat-Bold.otf */; };
+		076D4E391DE0BEC300D943DE /* Montserrat-ExtraBold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 076D4E311DE0BEC300D943DE /* Montserrat-ExtraBold.otf */; };
+		076D4E3A1DE0BEC300D943DE /* Montserrat-Hairline.otf in Resources */ = {isa = PBXBuildFile; fileRef = 076D4E321DE0BEC300D943DE /* Montserrat-Hairline.otf */; };
+		076D4E3B1DE0BEC300D943DE /* Montserrat-Light.otf in Resources */ = {isa = PBXBuildFile; fileRef = 076D4E331DE0BEC300D943DE /* Montserrat-Light.otf */; };
+		076D4E3C1DE0BEC300D943DE /* Montserrat-Regular.otf in Resources */ = {isa = PBXBuildFile; fileRef = 076D4E341DE0BEC300D943DE /* Montserrat-Regular.otf */; };
+		076D4E3D1DE0BEC300D943DE /* Montserrat-SemiBold.otf in Resources */ = {isa = PBXBuildFile; fileRef = 076D4E351DE0BEC300D943DE /* Montserrat-SemiBold.otf */; };
+		076D4E3E1DE0BEC300D943DE /* Montserrat-UltraLight.otf in Resources */ = {isa = PBXBuildFile; fileRef = 076D4E361DE0BEC300D943DE /* Montserrat-UltraLight.otf */; };
+		076D4E7B1DE1349C00D943DE /* launchscreen.png in Resources */ = {isa = PBXBuildFile; fileRef = 076D4E7A1DE1349C00D943DE /* launchscreen.png */; };
 		133E29F31AD74F7200F7D852 /* libRCTLinking.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 78C398B91ACF4ADC00677621 /* libRCTLinking.a */; };
 		139105C61AF99C1200B5F7CC /* libRCTSettings.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 139105C11AF99BAD00B5F7CC /* libRCTSettings.a */; };
 		139FDEF61B0652A700C62182 /* libRCTWebSocket.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 139FDEF41B06529B00C62182 /* libRCTWebSocket.a */; };
@@ -198,6 +207,15 @@
 		00C302DF1ABCB9EE00DB3ED1 /* RCTVibration.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = RCTVibration.xcodeproj; path = "../node_modules/react-native/Libraries/Vibration/RCTVibration.xcodeproj"; sourceTree = "<group>"; };
 		076D4E1A1DE0AEB900D943DE /* RSKImageCropper.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = RSKImageCropper.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		076D4E1D1DE0AEB900D943DE /* QBImagePicker.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = QBImagePicker.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		076D4E2F1DE0BEC300D943DE /* Montserrat-Black.otf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "Montserrat-Black.otf"; path = "../res/fonts/Montserrat-Black.otf"; sourceTree = "<group>"; };
+		076D4E301DE0BEC300D943DE /* Montserrat-Bold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "Montserrat-Bold.otf"; path = "../res/fonts/Montserrat-Bold.otf"; sourceTree = "<group>"; };
+		076D4E311DE0BEC300D943DE /* Montserrat-ExtraBold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "Montserrat-ExtraBold.otf"; path = "../res/fonts/Montserrat-ExtraBold.otf"; sourceTree = "<group>"; };
+		076D4E321DE0BEC300D943DE /* Montserrat-Hairline.otf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "Montserrat-Hairline.otf"; path = "../res/fonts/Montserrat-Hairline.otf"; sourceTree = "<group>"; };
+		076D4E331DE0BEC300D943DE /* Montserrat-Light.otf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "Montserrat-Light.otf"; path = "../res/fonts/Montserrat-Light.otf"; sourceTree = "<group>"; };
+		076D4E341DE0BEC300D943DE /* Montserrat-Regular.otf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "Montserrat-Regular.otf"; path = "../res/fonts/Montserrat-Regular.otf"; sourceTree = "<group>"; };
+		076D4E351DE0BEC300D943DE /* Montserrat-SemiBold.otf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "Montserrat-SemiBold.otf"; path = "../res/fonts/Montserrat-SemiBold.otf"; sourceTree = "<group>"; };
+		076D4E361DE0BEC300D943DE /* Montserrat-UltraLight.otf */ = {isa = PBXFileReference; lastKnownFileType = file; name = "Montserrat-UltraLight.otf"; path = "../res/fonts/Montserrat-UltraLight.otf"; sourceTree = "<group>"; };
+		076D4E7A1DE1349C00D943DE /* launchscreen.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = launchscreen.png; path = ../res/icons/launchscreen.png; sourceTree = "<group>"; };
 		0DE209C3244347CE9894CD57 /* Entypo.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = Entypo.ttf; path = "../node_modules/react-native-vector-icons/Fonts/Entypo.ttf"; sourceTree = "<group>"; };
 		139105B61AF99BAD00B5F7CC /* RCTSettings.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = RCTSettings.xcodeproj; path = "../node_modules/react-native/Libraries/Settings/RCTSettings.xcodeproj"; sourceTree = "<group>"; };
 		139FDEE61B06529A00C62182 /* RCTWebSocket.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = RCTWebSocket.xcodeproj; path = "../node_modules/react-native/Libraries/WebSocket/RCTWebSocket.xcodeproj"; sourceTree = "<group>"; };
@@ -411,6 +429,15 @@
 		A5A5A7F5D719497AB7FCE9B0 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				076D4E7A1DE1349C00D943DE /* launchscreen.png */,
+				076D4E2F1DE0BEC300D943DE /* Montserrat-Black.otf */,
+				076D4E301DE0BEC300D943DE /* Montserrat-Bold.otf */,
+				076D4E311DE0BEC300D943DE /* Montserrat-ExtraBold.otf */,
+				076D4E321DE0BEC300D943DE /* Montserrat-Hairline.otf */,
+				076D4E331DE0BEC300D943DE /* Montserrat-Light.otf */,
+				076D4E341DE0BEC300D943DE /* Montserrat-Regular.otf */,
+				076D4E351DE0BEC300D943DE /* Montserrat-SemiBold.otf */,
+				076D4E361DE0BEC300D943DE /* Montserrat-UltraLight.otf */,
 				0DE209C3244347CE9894CD57 /* Entypo.ttf */,
 				50E6D513D9934028B6BD6468 /* EvilIcons.ttf */,
 				C1BFEB347BDE425ABAB35639 /* FontAwesome.ttf */,
@@ -669,17 +696,26 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				076D4E391DE0BEC300D943DE /* Montserrat-ExtraBold.otf in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				13B07FBD1A68108700A75B9A /* LaunchScreen.xib in Resources */,
+				076D4E3D1DE0BEC300D943DE /* Montserrat-SemiBold.otf in Resources */,
+				076D4E3A1DE0BEC300D943DE /* Montserrat-Hairline.otf in Resources */,
+				076D4E3E1DE0BEC300D943DE /* Montserrat-UltraLight.otf in Resources */,
 				845B606F86AF49CB9FCEAA5D /* Entypo.ttf in Resources */,
 				A269CB2E93B541D48F56629C /* EvilIcons.ttf in Resources */,
+				076D4E371DE0BEC300D943DE /* Montserrat-Black.otf in Resources */,
 				83422F405ACF47B6AF980351 /* FontAwesome.ttf in Resources */,
+				076D4E7B1DE1349C00D943DE /* launchscreen.png in Resources */,
 				2109ADDB877B43F38D0D6B00 /* Foundation.ttf in Resources */,
 				E1A724374C4C42658ED2A535 /* Ionicons.ttf in Resources */,
 				6D3C57C544384BB5ABD34A4A /* MaterialIcons.ttf in Resources */,
+				076D4E3C1DE0BEC300D943DE /* Montserrat-Regular.otf in Resources */,
 				CB3D6BE3CC594B69A47CB6F2 /* Octicons.ttf in Resources */,
+				076D4E381DE0BEC300D943DE /* Montserrat-Bold.otf in Resources */,
 				C805200A1BE04BEABAF8292B /* SimpleLineIcons.ttf in Resources */,
 				585ACAC0B5324213B05E600B /* Zocial.ttf in Resources */,
+				076D4E3B1DE0BEC300D943DE /* Montserrat-Light.otf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

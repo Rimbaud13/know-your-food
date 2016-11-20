@@ -1,13 +1,13 @@
 'use strict';
 
 import Home from "./Home";
-import Tesseract from "./Tesseract";
+import UserInfo from "./UserInfo";
 
 const Routes = {
   Home,
-  Tesseract,
+  UserInfo,
 
-  start : Home,
+  start : UserInfo,
 };
 
 for (const component in Routes) {
