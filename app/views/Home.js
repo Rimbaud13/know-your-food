@@ -358,12 +358,63 @@ class Home extends Component {
             .then(response => {
                 const imgUrl = `http://163.172.173.89:56792/docker/${name}`;
                 console.log(response.body, imgUrl);
+
+
                 fetch(`http://128.179.178.198:3000/image?image=${imgUrl}`)
                     .then(x => {
-                        console.log(x);
+                        // console.log(x);
                         this.setState({isLoading: false});
+
+                        console.log(x);
+                        x.json().then(res => {
+                            console.log(res);
+                            let g = [];
+
+                            // for (let meal in res) {
+                            res.forEach(meal => {
+
+                                // a meal
+                                let m = {};
+                                m.name = meal.name;
+                                m.price = meal.price;
+                                m.description = meal.description ? meal.description.join(" ") : "";
+
+                                console.log(m);
+
+                                // array of ingredients
+                                let a = [];
+
+                                let ingredients = Object.keys(meal.values);
+
+                                ingredients.forEach(ingredient => {
+                                    // an ingredient
+                                    let val = {name: ingredient};
+
+                                    let nutrients = meal.values[ingredient].nutrients;
+                                    nutrients.forEach(nutrient => {
+                                        const eng = frtoeng(nutrient.fr);
+                                        if (eng !== "")
+                                            val[eng] = nutrient.per_hundred;
+                                    });
+
+                                    a.push(val);
+                                });
+
+                                console.log(a);
+                                m.ingredients = a;
+                                g.push(m);
+                            });
+                            console.log(g);
+
+                        }).catch(console.log);
+                        this.setState({isLoading: false});
+
+
                     })
                     .catch(() => this.handleError());
+
+
+
             }).catch(() => this.handleError());
     }
 
@@ -373,54 +424,12 @@ class Home extends Component {
     }
 
     takePicture() {
-        fetch(`http://128.179.178.198:3000/image?image=http://163.172.173.89:56792/docker/0A0056A6-A70A-4530-AD85-B1F24A5438E6.jpg`)
+
+        /* fetch(`http://128.179.178.198:3000/image?image=http://163.172.173.89:56792/docker/0A0056A6-A70A-4530-AD85-B1F24A5438E6.jpg`)
             .then(x => {
-                console.log(x);
-                x.json().then(res => {
-                    console.log(res);
-                    let g = [];
-
-                    // for (let meal in res) {
-                    res.forEach(meal => {
-
-                        // a meal
-                        let m = {};
-                        m.name = meal.name;
-                        m.price = meal.price;
-                        m.description = meal.description ? meal.description.join(" ") : "";
-
-                        console.log(m);
-
-                        // array of ingredients
-                        let a = [];
-
-                        let ingredients = Object.keys(meal.values);
-
-                        ingredients.forEach(ingredient => {
-                            // an ingredient
-                            let val = {name: ingredient};
-
-                            let nutrients = meal.values[ingredient].nutrients;
-                            nutrients.forEach(nutrient => {
-                                const eng = frtoeng(nutrient.fr);
-                                if (eng !== "")
-                                    val[eng] = nutrient.per_hundred;
-                            });
-
-                            a.push(val);
-                        });
-
-                        console.log(a);
-                        m.ingredients = a;
-                        g.push(m);
-                    });
-                    console.log(g);
-
-                }).catch(console.log);
-                this.setState({isLoading: false});
-            })
+                            })
             .catch(() => this.handleError());
-        return;
+        return; */
         ImagePicker.openCamera({
             width: 1000,
             height: 1000,
