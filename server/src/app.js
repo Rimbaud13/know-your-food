@@ -4,7 +4,7 @@ import express from 'express';
 var bodyParser = require('body-parser')
 import imageProcess from './tesseract';
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 const app = express();
 
