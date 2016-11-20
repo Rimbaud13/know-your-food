@@ -24,6 +24,6 @@ async function search(values: array<string>) {
   console.log(res)
 }); */
 
-migros('lasagne').then(console.log)
+// migros('lasagne').then(console.log)
 
 export default search;

@@ -53,16 +53,25 @@ async function searchMeals(meals) {
     let result = [];
 
     for (let meal of meals) {
-        const o = {name: meal.name.trim(), price: meal.price, description: meal.description};
+        if (!hasNumbers(meal.name)) {
+            const o = {name: meal.name.trim(), price: meal.price, description: meal.description};
 
-        const terms = preprocess(meal.description);
-        console.log(terms);
-        o.values = await search(terms);
-        result.push(o);
+            const terms = preprocess(meal.description);
+            if (terms.length > 0) {
+                console.log(terms);
+                o.values = await search(terms);
+                result.push(o);
+            }
+        }
     }
 
     return result;
 
+}
+
+function hasNumbers(t) {
+    var regex = /\d/g;
+    return regex.test(t);
 }
 
 function preprocess(description) {
@@ -119,7 +128,8 @@ function parse(text) {
             name = line;
             mealCount++;
         } else if (!isan) {
-            line.split(" ").forEach(x => description.push(x));
+            if (line !== '')
+                line.split(" ").forEach(x => description.push(x));
         }
 
         if (isan) {
